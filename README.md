@@ -11,7 +11,7 @@ Saikou is crafted based on simplistic yet state-of-the-art elegance. It is an [A
 </i> 
 <br>
 <br>
-<a href="https://www.buymeacoffee.com/brahmkshatriya"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=brahmkshatriya&button_colour=FFDD00&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=ffffff" /></a>
+<a href="https://bmc.link/chihaku"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=brahmkshatriya&button_colour=FFDD00&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=ffffff" /></a>
 <br>
 ### 🌟STAR THIS REPOSITORY TO SUPPORT THE DEVELOPER AND ENCOURAGE THE DEVELOPMENT OF THE APPLICATION!
 
