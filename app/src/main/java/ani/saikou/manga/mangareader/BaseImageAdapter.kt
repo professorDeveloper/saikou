@@ -1,19 +1,27 @@
 package ani.saikou.manga.mangareader
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.GestureDetectorCompat
 import androidx.core.view.updateLayoutParams
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import ani.saikou.GesturesListener
-import ani.saikou.R
+import ani.saikou.*
 import ani.saikou.manga.MangaChapter
-import ani.saikou.px
 import ani.saikou.settings.CurrentReaderSettings
 import com.alexvasilkov.gestures.views.GestureFrameLayout
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.model.GlideUrl
+import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 abstract class BaseImageAdapter(
     val activity: MangaReaderActivity,
@@ -21,7 +29,7 @@ abstract class BaseImageAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     val settings = activity.settings.default
     val uiSettings = activity.uiSettings
-    val images = chapter.images!!
+    val images = chapter.images()
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -52,7 +60,7 @@ abstract class BaseImageAdapter(
             }
         } else {
             val detector = GestureDetectorCompat(view.context, object : GesturesListener() {
-                override fun onSingleClick(event: MotionEvent?) = activity.handleController()
+                override fun onSingleClick(event: MotionEvent) = activity.handleController()
             })
             view.findViewById<View>(R.id.imgProgCover).apply {
                 setOnTouchListener { _, event ->
@@ -62,16 +70,55 @@ abstract class BaseImageAdapter(
                 setOnLongClickListener {
                     val pos = holder.bindingAdapterPosition
                     val image = images.getOrNull(pos) ?: return@setOnLongClickListener false
-                    activity.onImageLongClicked(pos,image){ dialog ->
-                        loadImage(pos, view)
+                    activity.onImageLongClicked(pos, image, null) { dialog ->
+                        activity.lifecycleScope.launch {
+                            loadImage(pos, view)
+                        }
                         view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                         dialog.dismiss()
                     }
                 }
             }
         }
-        loadImage(holder.bindingAdapterPosition, view)
+        activity.lifecycleScope.launch { loadImage(holder.bindingAdapterPosition, view) }
     }
 
-    abstract fun loadImage(position: Int, parent: View): Boolean
+    abstract suspend fun loadImage(position: Int, parent: View): Boolean
+
+    companion object {
+        suspend fun Context.loadBitmap(link: FileUrl, transforms: List<BitmapTransformation>): Bitmap? {
+            return tryWithSuspend {
+                withContext(Dispatchers.IO) {
+                    Glide.with(this@loadBitmap)
+                        .asBitmap()
+                        .load(GlideUrl(link.url) { link.headers })
+                        .let {
+                            if (transforms.isNotEmpty())
+                                it.transform(*transforms.toTypedArray())
+                            else it
+                        }
+                        .submit()
+                        .get()
+                }
+            }
+        }
+
+        fun mergeBitmap(bitmap1: Bitmap, bitmap2: Bitmap, scale: Boolean = false): Bitmap {
+            val height = if (bitmap1.height > bitmap2.height) bitmap1.height else bitmap2.height
+            val (bit1, bit2) = if (!scale) bitmap1 to bitmap2 else {
+                val width1 = bitmap1.width * height * 1f / bitmap1.height
+                val width2 = bitmap2.width * height * 1f / bitmap2.height
+                (Bitmap.createScaledBitmap(bitmap1, width1.toInt(), height, false)
+                        to
+                        Bitmap.createScaledBitmap(bitmap2, width2.toInt(), height, false))
+            }
+            val width = bit1.width + bit2.width
+            val newBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(newBitmap)
+            canvas.drawBitmap(bit1, 0f, (height * 1f - bit1.height) / 2, null)
+            canvas.drawBitmap(bit2, bit1.width.toFloat(), (height * 1f - bit2.height) / 2, null)
+            return newBitmap
+        }
+    }
+
 }

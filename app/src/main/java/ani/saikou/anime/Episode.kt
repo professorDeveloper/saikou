@@ -19,7 +19,7 @@ data class Episode(
     var allStreams: Boolean = false,
     var watched: Long? = null,
     var maxLength: Long? = null,
-    val extra: Any?=null,
+    val extra: Map<String,String>?=null,
 
     ) : Serializable
 

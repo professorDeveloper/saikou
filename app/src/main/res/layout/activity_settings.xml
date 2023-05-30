@@ -146,6 +146,187 @@
 
             </LinearLayout>
 
+            <ani.saikou.others.Xpandable
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:fontFamily="@font/poppins_bold"
+                    android:gravity="center_vertical"
+                    android:text="@string/accounts"
+                    android:textColor="?attr/colorSecondary"
+                    app:drawableEndCompat="@drawable/ic_round_arrow_drop_down_24"
+                    tools:ignore="TextContrastCheck" />
+
+                <LinearLayout
+                    android:id="@+id/settingsAnilistLoginContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="20dp"
+                        android:contentDescription="@string/anilist"
+                        app:srcCompat="@drawable/ic_anilist" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:minHeight="64dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/settingsAnilistUsername"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="-4dp"
+                            android:fontFamily="@font/poppins_bold"
+                            android:gravity="center"
+                            android:text="@string/username"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/settingsAnilistLogin"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="-16dp"
+                            android:layout_marginTop="-16dp"
+                            android:layout_marginBottom="-16dp"
+                            android:fontFamily="@font/poppins_bold"
+                            android:padding="16dp"
+                            android:text="@string/logout"
+                            android:textColor="?attr/colorSecondaryVariant"
+                            android:textSize="14sp" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/settingsAnilistAvatarContainer"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="4dp"
+                        android:backgroundTint="@color/nav_bg_inv"
+                        app:cardCornerRadius="26dp">
+
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/settingsAnilistAvatar"
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:scaleType="center"
+                            app:srcCompat="@drawable/ic_round_person_24"
+                            tools:ignore="ContentDescription,ImageContrastCheck" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/settingsMalLoginContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="16dp"
+                        android:contentDescription="@string/myanimelist"
+                        app:srcCompat="@drawable/ic_myanimelist" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:minHeight="64dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/settingsMALLoginRequired"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:alpha="0.5"
+                            android:fontFamily="@font/poppins_bold"
+                            android:text="@string/login_with_anilist"
+                            android:textAlignment="center"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/settingsMALUsername"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="-4dp"
+                            android:fontFamily="@font/poppins_bold"
+                            android:gravity="center"
+                            android:text="@string/username"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/settingsMALLogin"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="-16dp"
+                            android:layout_marginTop="-16dp"
+                            android:layout_marginBottom="-16dp"
+                            android:fontFamily="@font/poppins_bold"
+                            android:padding="16dp"
+                            android:text="@string/logout"
+                            android:textColor="?attr/colorSecondaryVariant"
+                            android:textSize="14sp" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/settingsMALAvatarContainer"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:layout_marginTop="4dp"
+                        android:backgroundTint="@color/nav_bg_inv"
+                        app:cardCornerRadius="26dp">
+
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/settingsMALAvatar"
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:scaleType="center"
+                            app:srcCompat="@drawable/ic_round_person_24"
+                            tools:ignore="ContentDescription,ImageContrastCheck" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/settingsAccountHelp"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:layout_marginStart="-32dp"
+                    android:layout_marginEnd="-32dp"
+                    android:background="@color/bg"
+                    android:drawablePadding="16dp"
+                    android:fontFamily="@font/poppins_bold"
+                    android:gravity="center_vertical"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    android:text="@string/account_help"
+                    android:textAllCaps="false"
+                    android:textColor="@color/bg_opp"
+                    app:cornerRadius="0dp"
+                    app:drawableStartCompat="@drawable/ic_round_help_24"
+                    app:drawableTint="?attr/colorPrimary" />
+
+
+            </ani.saikou.others.Xpandable>
 
             <ani.saikou.others.Xpandable
                 android:layout_width="match_parent"
@@ -317,6 +498,27 @@
                     android:text="@string/dns_info"
                     android:textSize="14sp" />
 
+                <Button
+                    android:id="@+id/settingsDownloadManager"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:layout_marginStart="-32dp"
+                    android:layout_marginEnd="-32dp"
+                    android:fontFamily="@font/poppins_bold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    android:text="@string/download_manager_select"
+                    android:textAlignment="viewStart"
+                    android:textAllCaps="false"
+                    android:textColor="@color/bg_opp"
+                    app:cornerRadius="0dp"
+                    app:icon="@drawable/ic_round_download_24"
+                    app:iconPadding="16dp"
+                    app:iconSize="24dp" />
+
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/settingsDownloadInSd"
                     android:layout_width="match_parent"
@@ -328,6 +530,24 @@
                     android:fontFamily="@font/poppins_bold"
                     android:minHeight="64dp"
                     android:text="@string/downloadInSd"
+                    android:textAlignment="viewStart"
+                    android:textColor="@color/bg_opp"
+                    app:cornerRadius="0dp"
+                    app:drawableTint="?attr/colorPrimary"
+                    app:showText="false"
+                    app:thumbTint="@color/button_switch_track" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/settingsContinueMedia"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:drawableStart="@drawable/ic_round_play_disabled_24"
+                    android:drawablePadding="16dp"
+                    android:elegantTextHeight="true"
+                    android:fontFamily="@font/poppins_bold"
+                    android:minHeight="64dp"
+                    android:text="@string/always_continue_shows"
                     android:textAlignment="viewStart"
                     android:textColor="@color/bg_opp"
                     app:cornerRadius="0dp"
@@ -353,18 +573,62 @@
                     app:showText="false"
                     app:thumbTint="@color/button_switch_track" />
 
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/settingsShowYt"
+            </ani.saikou.others.Xpandable>
+
+            <ani.saikou.others.Xpandable
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:fontFamily="@font/poppins_bold"
+                    android:gravity="center_vertical"
+                    android:text="@string/notifications"
+                    android:textColor="?attr/colorSecondary"
+                    app:drawableEndCompat="@drawable/ic_round_arrow_drop_down_24"
+                    tools:ignore="TextContrastCheck" />
+
+                <Button
+                    android:id="@+id/settingsSubscriptionsTime"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginStart="-12dp"
+                    android:fontFamily="@font/poppins_bold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="@string/subscriptions_checking_time_s"
+                    android:textAlignment="viewStart"
+                    android:textAllCaps="false"
+                    android:textColor="@color/bg_opp"
+                    app:cornerRadius="0dp"
+                    app:icon="@drawable/ic_round_notifications_none_24"
+                    app:iconPadding="16dp"
+                    app:iconSize="24dp" />
+
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:checked="true"
-                    android:drawableStart="@drawable/ic_round_play_circle_24"
+                    android:layout_marginBottom="8dp"
+                    android:alpha="0.58"
+                    android:fontFamily="@font/poppins_family"
+                    android:text="@string/subscriptions_info"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/settingsNotificationsCheckingSubscriptions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    android:drawableStart="@drawable/ic_round_smart_button_24"
                     android:drawablePadding="16dp"
                     android:elegantTextHeight="true"
                     android:fontFamily="@font/poppins_bold"
                     android:minHeight="64dp"
-                    android:text="@string/show_yt"
+                    android:text="@string/notification_for_checking_subscriptions"
                     android:textAlignment="viewStart"
                     android:textColor="@color/bg_opp"
                     app:cornerRadius="0dp"
@@ -434,6 +698,25 @@
                     android:fontFamily="@font/poppins_bold"
                     android:minHeight="64dp"
                     android:text="@string/prefer_dub"
+                    android:textAlignment="viewStart"
+                    android:textColor="@color/bg_opp"
+                    app:cornerRadius="0dp"
+                    app:drawableTint="?attr/colorPrimary"
+                    app:showText="false"
+                    app:thumbTint="@color/button_switch_track" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/settingsShowYt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:checked="true"
+                    android:drawableStart="@drawable/ic_round_play_circle_24"
+                    android:drawablePadding="16dp"
+                    android:elegantTextHeight="true"
+                    android:fontFamily="@font/poppins_bold"
+                    android:minHeight="64dp"
+                    android:text="@string/show_yt"
                     android:textAlignment="viewStart"
                     android:textColor="@color/bg_opp"
                     app:cornerRadius="0dp"
@@ -714,15 +997,47 @@
                     app:drawableEndCompat="@drawable/ic_round_arrow_drop_down_24"
                     tools:ignore="TextContrastCheck" />
 
-                <TextView
-                    android:id="@+id/settingsInfo"
+                <Button
+                    android:id="@+id/settingsFAQ"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:layout_marginStart="-32dp"
+                    android:layout_marginEnd="-32dp"
+                    android:background="@drawable/ui_bg"
+                    android:backgroundTint="@color/bg_opp"
+                    android:backgroundTintMode="src_atop"
+                    android:fontFamily="@font/poppins_bold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    android:text="@string/faq"
+                    android:textAlignment="viewStart"
+                    android:textAllCaps="false"
+                    android:textColor="@color/bg_opp"
+                    app:cornerRadius="0dp"
+                    app:icon="@drawable/ic_round_help_24"
+                    app:iconPadding="16dp"
+                    app:iconSize="24dp"
+                    app:iconTint="?attr/colorPrimary" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/settingsCheckUpdate"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:alpha="0.58"
-                    android:ellipsize="end"
-                    android:maxLines="3"
-                    android:text="@string/desc"
-                    tools:ignore="TextContrastCheck" />
+                    android:checked="true"
+                    android:drawableStart="@drawable/ic_round_new_releases_24"
+                    android:drawablePadding="16dp"
+                    android:elegantTextHeight="true"
+                    android:fontFamily="@font/poppins_bold"
+                    android:minHeight="64dp"
+                    android:text="@string/check_app_updates"
+                    android:textAlignment="viewStart"
+                    android:textColor="@color/bg_opp"
+                    app:cornerRadius="0dp"
+                    app:drawableTint="?attr/colorPrimary"
+                    app:showText="false"
+                    app:thumbTint="@color/button_switch_track" />
 
                 <Button
                     android:id="@+id/settingsDev"
@@ -742,6 +1057,27 @@
                     android:textColor="@color/bg_opp"
                     app:cornerRadius="0dp"
                     app:icon="@drawable/ic_round_accessible_forward_24"
+                    app:iconPadding="16dp"
+                    app:iconSize="24dp" />
+
+                <Button
+                    android:id="@+id/settingsForks"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:layout_marginStart="-32dp"
+                    android:layout_marginEnd="-32dp"
+                    android:fontFamily="@font/poppins_bold"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    android:text="@string/forks"
+                    android:textAlignment="viewStart"
+                    android:textAllCaps="false"
+                    android:textColor="@color/bg_opp"
+                    app:cornerRadius="0dp"
+                    app:icon="@drawable/ic_round_restaurant_24"
                     app:iconPadding="16dp"
                     app:iconSize="24dp" />
 
@@ -769,7 +1105,6 @@
 
             </ani.saikou.others.Xpandable>
 
-
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -784,8 +1119,9 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="16dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:clipToPadding="false"
                 android:gravity="center"
                 android:orientation="horizontal">
 
@@ -799,6 +1135,7 @@
                 <View
                     android:layout_width="16dp"
                     android:layout_height="match_parent" />
+
 
                 <ImageView
                     android:id="@+id/settingUPI"

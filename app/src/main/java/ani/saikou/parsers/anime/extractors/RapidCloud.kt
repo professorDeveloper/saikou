@@ -63,7 +63,7 @@ class RapidCloud(override val server: VideoServer) : VideoExtractor() {
 
     companion object {
         private suspend fun decryptKey(): String {
-            return client.get("https://raw.githubusercontent.com/consumet/rapidclown/main/key.txt").text
+            return client.get("https://raw.githubusercontent.com/enimax-anime/key/e6/key.txt").text
         }
 
         private suspend fun wss(): String {

@@ -6,7 +6,7 @@ data class CurrentReaderSettings(
     var direction: Directions = Directions.TOP_TO_BOTTOM,
     var layout: Layouts = Layouts.CONTINUOUS,
     var dualPageMode: DualPageModes = DualPageModes.Automatic,
-    var overScrollMode : Boolean = true,
+    var overScrollMode: Boolean = true,
     var trueColors: Boolean = false,
     var rotation: Boolean = true,
     var padding: Boolean = true,
@@ -15,37 +15,26 @@ data class CurrentReaderSettings(
     var keepScreenOn: Boolean = false,
     var volumeButtons: Boolean = false,
     var wrapImages: Boolean = false,
+    var longClickImage: Boolean = true,
+    var cropBorders: Boolean = false,
+    var cropBorderThreshold: Int = 10,
 ) : Serializable {
 
-    enum class Directions {
-        TOP_TO_BOTTOM, RIGHT_TO_LEFT, BOTTOM_TO_TOP, LEFT_TO_RIGHT, ;
-
-        override fun toString(): String {
-            return when (super.ordinal) {
-                TOP_TO_BOTTOM.ordinal -> "Top to Bottom"
-                RIGHT_TO_LEFT.ordinal -> "Right to Left"
-                BOTTOM_TO_TOP.ordinal -> "Bottom to Top"
-                LEFT_TO_RIGHT.ordinal -> "Left to Right"
-                else                  -> "Wha"
-            }
-        }
+    enum class Directions(val string: String) {
+        TOP_TO_BOTTOM("Top to Bottom"),
+        RIGHT_TO_LEFT("Right to Left"),
+        BOTTOM_TO_TOP("Bottom to Top"),
+        LEFT_TO_RIGHT("Left to Right");
 
         companion object {
             operator fun get(value: Int) = values().firstOrNull { it.ordinal == value }
         }
     }
 
-    enum class Layouts {
-        PAGED, CONTINUOUS_PAGED, CONTINUOUS;
-
-        override fun toString(): String {
-            return when (super.ordinal) {
-                PAGED.ordinal            -> "Paged"
-                CONTINUOUS_PAGED.ordinal -> "Continuous Paged"
-                CONTINUOUS.ordinal       -> "Continuous"
-                else                     -> "Wha"
-            }
-        }
+    enum class Layouts(val string: String) {
+        PAGED("Paged"),
+        CONTINUOUS_PAGED("Continuous Paged"),
+        CONTINUOUS("Continuous");
 
         companion object {
             operator fun get(value: Int) = values().firstOrNull { it.ordinal == value }

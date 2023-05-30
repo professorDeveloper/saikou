@@ -27,7 +27,7 @@ class HentaiMama : AnimeParser() {
             }
     }
 
-    override suspend fun loadVideoServers(episodeLink: String, extra: Any?): List<VideoServer> {
+    override suspend fun loadVideoServers(episodeLink: String, extra: Map<String,String>?): List<VideoServer> {
         val animeId = client.get(episodeLink).document.select("#post_report > input:nth-child(5)").attr("value")
         val json = Mapper.parse<List<String>>(
             client.post(

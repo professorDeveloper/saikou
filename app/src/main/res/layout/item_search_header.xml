@@ -48,9 +48,10 @@
         android:layout_height="match_parent"
         android:layout_marginTop="-16dp"
         android:layout_marginBottom="-4dp"
+        android:minHeight="16dp"
         android:orientation="horizontal">
 
-        <CheckBox
+        <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/searchList"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -60,9 +61,10 @@
             android:layoutDirection="inherit"
             android:text="@string/list_only"
             android:visibility="visible"
+            app:checkedState="indeterminate"
             tools:ignore="TextContrastCheck,TouchTargetSizeCheck" />
 
-        <CheckBox
+        <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/searchAdultCheck"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -110,7 +112,7 @@
             android:layout_height="48dp"
             android:layout_gravity="center"
             android:padding="8dp"
-            app:cardBackgroundColor="#23808080"
+            app:cardBackgroundColor="@color/nav_bg"
             app:cardCornerRadius="16dp"
             app:contentPadding="4dp"
             app:contentPaddingLeft="8dp"

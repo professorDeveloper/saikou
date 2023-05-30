@@ -13,19 +13,18 @@ import ani.saikou.anime.Episode
 import ani.saikou.anime.SelectorDialogFragment
 import ani.saikou.manga.MangaChapter
 import ani.saikou.others.AniSkip
-import ani.saikou.others.AnimeFillerList
+import ani.saikou.others.Jikan
 import ani.saikou.others.Kitsu
 import ani.saikou.parsers.*
-import com.bumptech.glide.load.Transformation
+import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import java.io.File
 
 class MediaDetailsViewModel : ViewModel() {
     val scrolledToTop = MutableLiveData(true)
 
-    fun saveSelected(id: Int, data: Selected, activity: Activity) {
+    fun saveSelected(id: Int, data: Selected, activity: Activity? = null) {
         saveData("$id-select", data, activity)
     }
 
@@ -36,6 +35,7 @@ class MediaDetailsViewModel : ViewModel() {
                 else -> loadData("settings_def_manga_source") ?: 0
             }
             it.preferDub = loadData("settings_prefer_dub") ?: false
+            saveSelected(media.id, it)
             it
         }
     }
@@ -74,7 +74,7 @@ class MediaDetailsViewModel : ViewModel() {
     suspend fun loadFillerEpisodes(s: Media) {
         tryWithSuspend {
             if (fillerEpisodes.value == null) fillerEpisodes.postValue(
-                AnimeFillerList.getFillers(
+                Jikan.getEpisodes(
                     s.idMAL ?: return@tryWithSuspend
                 )
             )
@@ -113,7 +113,7 @@ class MediaDetailsViewModel : ViewModel() {
             val list = mutableListOf<VideoExtractor>()
             ep.extractors = list
             watchSources?.get(i)?.apply {
-                if (!post && post == allowsPreloading) return@apply
+                if (!post && !allowsPreloading) return@apply
                 loadByVideoServers(link, ep.extra) {
                     if (it.videos.isNotEmpty()) {
                         list.add(it)
@@ -121,7 +121,8 @@ class MediaDetailsViewModel : ViewModel() {
                     }
                 }
                 ep.extractorCallback = null
-                ep.allStreams = true
+                if (list.isNotEmpty())
+                    ep.allStreams = true
             }
         }
 
@@ -135,13 +136,13 @@ class MediaDetailsViewModel : ViewModel() {
     }
 
     val timeStamps = MutableLiveData<List<AniSkip.Stamp>?>()
-    private val timeStampsMap : MutableMap<Int, List<AniSkip.Stamp>?> = mutableMapOf()
-    suspend fun loadTimeStamps(malId:Int?, episodeNum: Int?, duration:Long){
+    private val timeStampsMap: MutableMap<Int, List<AniSkip.Stamp>?> = mutableMapOf()
+    suspend fun loadTimeStamps(malId: Int?, episodeNum: Int?, duration: Long, useProxyForTimeStamps: Boolean) {
         malId ?: return
         episodeNum ?: return
         if (timeStampsMap.containsKey(episodeNum))
             return timeStamps.postValue(timeStampsMap[episodeNum])
-        val result = AniSkip.getResult(malId, episodeNum, duration)
+        val result = AniSkip.getResult(malId, episodeNum, duration, useProxyForTimeStamps)
         timeStampsMap[episodeNum] = result
         timeStamps.postValue(result)
     }
@@ -153,8 +154,8 @@ class MediaDetailsViewModel : ViewModel() {
             val link = ep.link ?: return false
 
             ep.extractors = mutableListOf(watchSources?.get(selected.source)?.let {
-                if (!post && post == it.allowsPreloading) null
-                else it.loadSingleVideoServer(server, link, ep.extra)
+                if (!post && !it.allowsPreloading) null
+                else it.loadSingleVideoServer(server, link, ep.extra, post)
             } ?: return false)
             ep.allStreams = false
         }
@@ -182,7 +183,7 @@ class MediaDetailsViewModel : ViewModel() {
                 if (media.anime?.episodes?.get(i) != null) {
                     media.anime.selectedEpisode = i
                 } else {
-                    toastString("Couldn't find episode : $i")
+                    snackString("Couldn't find episode : $i")
                     return@post
                 }
                 media.selected = this.loadSelected(media)
@@ -215,18 +216,19 @@ class MediaDetailsViewModel : ViewModel() {
         mangaChapters.postValue(mangaLoaded)
     }
 
-    private val mangaChapter = MutableLiveData<MangaChapter?>(null)
+    val mangaChapter = MutableLiveData<MangaChapter?>(null)
     fun getMangaChapter(): LiveData<MangaChapter?> = mangaChapter
-    suspend fun loadMangaChapterImages(chapter: MangaChapter, selected: Selected, post: Boolean = true) {
-        tryWithSuspend {
-            if (chapter.images == null) {
-                chapter.images = mangaReadSources?.get(selected.source)?.loadImages(chapter.link) ?: return@tryWithSuspend
-            }
-        }
-        if (post) mangaChapter.postValue(chapter)
+    suspend fun loadMangaChapterImages(chapter: MangaChapter, selected: Selected, post: Boolean = true): Boolean {
+        return tryWithSuspend(true) {
+            chapter.addImages(
+                mangaReadSources?.get(selected.source)?.loadImages(chapter.link) ?: return@tryWithSuspend false
+            )
+            if (post) mangaChapter.postValue(chapter)
+            true
+        } ?: false
     }
 
-    fun loadTransformation(mangaImage: MangaImage, source: Int): Transformation<File>? {
+    fun loadTransformation(mangaImage: MangaImage, source: Int): BitmapTransformation? {
         return if (mangaImage.useTransformation) mangaReadSources?.get(source)?.getTransformation() else null
     }
 }

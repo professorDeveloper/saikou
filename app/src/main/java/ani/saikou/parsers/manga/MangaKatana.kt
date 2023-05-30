@@ -1,6 +1,7 @@
 package ani.saikou.parsers.manga
 
 import ani.saikou.client
+import ani.saikou.findBetween
 import ani.saikou.parsers.MangaChapter
 import ani.saikou.parsers.MangaImage
 import ani.saikou.parsers.MangaParser
@@ -35,10 +36,8 @@ class MangaKatana : MangaParser() {
     }
 
     override suspend fun loadImages(chapterLink: String): List<MangaImage> {
-        val html = client.get(chapterLink).text
-        val re = Regex("var\\s+\\w+\\s?=\\s?(\\[['\"].+?['\"]).?\\]\\s?;")
-        val match = re.find(html)?.destructured?.toList()?.get(0)?.removePrefix("[")
-        return match!!.split(",").map {
+        val match = client.get(chapterLink).text.findBetween("=[",",];f")!!
+        return match.split(",").map {
             MangaImage(url = it.replace("\"", "").replace("'", ""))
         }
     }

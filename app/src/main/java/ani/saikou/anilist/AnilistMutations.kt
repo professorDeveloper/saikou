@@ -1,5 +1,6 @@
 package ani.saikou.anilist
 
+import ani.saikou.anilist.Anilist.executeQuery
 import ani.saikou.anilist.api.FuzzyDate
 import kotlinx.serialization.json.JsonObject
 

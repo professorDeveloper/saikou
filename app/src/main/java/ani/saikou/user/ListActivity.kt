@@ -73,6 +73,7 @@ class ListActivity : AppCompatActivity() {
                    R.id.score -> "score"
                    R.id.title -> "title"
                    R.id.updated -> "updatedAt"
+                   R.id.release -> "release"
                    else -> null
                }
 

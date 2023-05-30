@@ -501,6 +501,27 @@
                 app:thumbTint="@color/button_switch_track" />
 
             <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/readerSettingsCropBorders"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:drawableStart="@drawable/ic_round_auto_awesome_24"
+                android:drawablePadding="16dp"
+                android:elegantTextHeight="true"
+                android:fontFamily="@font/poppins_bold"
+                android:minHeight="64dp"
+                android:paddingStart="32dp"
+                android:paddingEnd="32dp"
+                android:text="@string/crop_borders"
+                android:textAlignment="viewStart"
+                android:textColor="@color/bg_opp"
+                app:cornerRadius="0dp"
+                app:drawableTint="?attr/colorPrimary"
+                app:showText="false"
+                app:thumbTint="@color/button_switch_track"
+                tools:ignore="TextContrastCheck" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/readerSettingsPadding"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -632,6 +653,26 @@
                 android:paddingEnd="32dp"
                 android:text="@string/wrap_images_info"
                 android:textSize="14sp" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/readerSettingsLongClickImage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:drawableStart="@drawable/ic_round_touch_app_24"
+                android:drawablePadding="16dp"
+                android:elegantTextHeight="true"
+                android:fontFamily="@font/poppins_bold"
+                android:minHeight="64dp"
+                android:paddingStart="32dp"
+                android:paddingEnd="32dp"
+                android:text="@string/image_long_clicking"
+                android:textAlignment="viewStart"
+                android:textColor="@color/bg_opp"
+                app:cornerRadius="0dp"
+                app:drawableTint="?attr/colorPrimary"
+                app:showText="false"
+                app:thumbTint="@color/button_switch_track" />
 
         </ani.saikou.others.Xpandable>
 

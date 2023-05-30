@@ -5,6 +5,7 @@ import ani.saikou.loadData
 import ani.saikou.media.Media
 import ani.saikou.saveData
 import java.io.Serializable
+import java.net.URLDecoder
 import java.net.URLEncoder
 
 abstract class BaseParser {
@@ -100,6 +101,7 @@ abstract class BaseParser {
     }
 
     fun encode(input: String): String = URLEncoder.encode(input, "utf-8").replace("+", "%20")
+    fun decode(input: String): String = URLDecoder.decode(input, "utf-8")
 }
 
 

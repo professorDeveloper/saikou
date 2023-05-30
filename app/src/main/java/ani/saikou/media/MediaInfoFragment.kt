@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
 import androidx.core.view.updateLayoutParams
@@ -21,6 +22,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import ani.saikou.*
+import ani.saikou.anilist.Anilist
 import ani.saikou.anilist.GenresViewModel
 import ani.saikou.databinding.*
 import io.noties.markwon.Markwon
@@ -112,6 +114,10 @@ class MediaInfoFragment : Fragment() {
                     type = "MANGA"
                     binding.mediaInfoTotalTitle.setText(R.string.total_chaps)
                     binding.mediaInfoTotal.text = (media.manga.totalChapters ?: "~").toString()
+                    media.manga.author?.let {
+                        binding.mediaInfoAuthorContainer.visibility = View.VISIBLE
+                        binding.mediaInfoAuthor.text = it
+                    }
                 }
 
                 val desc = HtmlCompat.fromHtml(
@@ -301,6 +307,27 @@ class MediaInfoFragment : Fragment() {
                             false
                         ).root
                         chip.text = media.tags[position]
+                        chip.setSafeOnClickListener {
+                            ContextCompat.startActivity(
+                                chip.context,
+                                Intent(chip.context, SearchActivity::class.java)
+                                    .putExtra("type", type)
+                                    .putExtra("sortBy", "Trending")
+                                    .putExtra("tag", media.tags[position].substringBefore(" :"))
+                                    .putExtra("search", true)
+                                    .also {
+                                        if (media.isAdult) {
+                                            if (!Anilist.adult) Toast.makeText(
+                                                chip.context,
+                                                "Turn on 18+ Content from your Anilist Settings",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            it.putExtra("hentai", true)
+                                        }
+                                    },
+                                null
+                            )
+                        }
                         chip.setOnLongClickListener { copyToClipboard(media.tags[position]);true }
                         bind.itemChipGroup.addView(chip)
                     }

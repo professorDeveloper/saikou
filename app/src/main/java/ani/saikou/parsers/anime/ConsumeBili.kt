@@ -10,47 +10,62 @@ class ConsumeBili : AnimeParser() {
     override val name = "Consume Bili"
     override val saveName = "consume-bili"
     override val isDubAvailableSeparately = false
-    override val hostUrl = "https://api.consumet.org/anime/bilibili"
+    override val hostUrl = "https://api-vn.kaguya.app/server"
+    private val headers = mapOf("referer" to "https://kaguya.app")
+
+    override suspend fun loadSavedShowResponse(mediaId: Int): ShowResponse {
+        return ShowResponse(
+            link = mediaId.toString(),
+            name = "Automatic",
+            coverUrl = ""
+        )
+    }
 
     override suspend fun loadEpisodes(animeLink: String, extra: Map<String, String>?): List<Episode> {
-        val response = client.get("$hostUrl/info?id=$animeLink").parsed<InfoResponse>()
+        val episodes = client
+            .get("${hostUrl}/anime/episodes?id=${animeLink}&source_id=bilibili", headers)
+            .parsed<EpisodesResponse>()
+        if (!episodes.success)
+            return emptyList()
 
-        return response.episodes.map {
+        return episodes.episodes!!.map {
+            val extraData =
+                mapOf("sourceEpisodeId" to it.sourceEpisodeId, "sourceMediaId" to it.sourceMediaId, "sourceId" to it.sourceId)
+            val title = "Episode ${it.name}"
             Episode(
-                number = it.number.toString(),
-                link = it.id,
-                title = it.title,
-                thumbnail = it.image,
+                number = it.name,
+                title = title,
+                link = "${it.sourceEpisodeId}-${it.sourceMediaId}-${it.sourceId}",
+                extra = extraData
             )
         }
     }
 
-    override suspend fun loadVideoServers(episodeLink: String, extra: Any?): List<VideoServer> {
-        val response = client.get("$hostUrl/watch?episodeId=$episodeLink").parsed<WatchResponse>()
+    override suspend fun loadVideoServers(episodeLink: String, extra: Map<String, String>?): List<VideoServer> {
+        extra?: return listOf()
+        val sourceEpisodeId = extra["sourceEpisodeId"]
+        val sourceMediaId = extra["sourceMediaId"]
+        val sourceId = extra["sourceId"]
+        val sources = client.get(
+            "${hostUrl}/source?episode_id=${sourceEpisodeId}&source_media_id=${sourceMediaId}&source_id=${sourceId}",
+            headers
+        ).parsed<SourcesResponse>()
 
-        val sources = response.sources.map { source ->
-            Video(
-                null,
-                VideoType.DASH,
-                FileUrl(
-                    url = source.url,
-                )
-            )
-        }
+        if (!sources.success)
+            return emptyList()
 
-        val subtitles = response.subtitles.map {
-            Subtitle(
-                language = it.lang,
-                url = it.url,
-                type = SubtitleType.VTT
-            )
+        val modifiedSources = sources.sources.joinToString(",") {
+            it.file
         }
+        val modifiedSubtitles = sources.subtitles?.joinToString(",") {
+            it.lang + ";" + it.file
+        } ?: ""
 
         return listOf(
             VideoServer(
-                name = "Bilibili",
+                name = "Server",
                 embed = FileUrl(url = ""),
-                extraData = mapOf("sources" to sources, "subtitles" to subtitles)
+                extraData = mapOf("videos" to modifiedSources, "subs" to modifiedSubtitles)
             )
         )
     }
@@ -61,77 +76,63 @@ class ConsumeBili : AnimeParser() {
 
     class BilibiliExtractor(override val server: VideoServer) : VideoExtractor() {
         override suspend fun extract(): VideoContainer {
-            val extra = server.extraData as Map<*, *>
-
-            val subtitles = extra["subtitles"] as List<Subtitle>
-            val sources = extra["sources"] as List<Video>
-
-            return VideoContainer(
-                videos = sources,
-                subtitles = subtitles
-            )
+            val videos = server.extraData?.get("videos")!!.split(",").map {
+                Video(null, VideoType.DASH, it)
+            }
+            val subs = server.extraData["subs"]!!.split(",").map {
+                val a = it.split(";")
+                Subtitle(a[0], a[1])
+            }
+            return VideoContainer(videos,subs)
         }
     }
 
     override suspend fun search(query: String): List<ShowResponse> {
-        val encoded = encode(query)
-        val response = client.get("$hostUrl/$encoded").parsed<SearchResponse>()
-        return response.results.map {
-            ShowResponse(
-                name = it.title,
-                link = it.id.toString(),
-                coverUrl = FileUrl(it.image)
-            )
-        }
+        return emptyList()
     }
 
     @Serializable
-    data class SearchResponse(
-        @SerialName("totalResults") val totalResults: Int?,
-        @SerialName("results") val results: ArrayList<SearchResult>
+    data class EpisodesResponse(
+        @SerialName("success") val success: Boolean,
+        @SerialName("episodes") val episodes: List<SourceEpisode>? = null
     )
 
     @Serializable
-    data class SearchResult(
-        @SerialName("id") val id: Int,
-        @SerialName("title") val title: String,
-        @SerialName("image") val image: String,
-        @SerialName("genres") val genres: ArrayList<String>,
+    data class SourcesResponse(
+        @SerialName("success") val success: Boolean,
+        @SerialName("sources") val sources: List<VideoSource>,
+        @SerialName("subtitles") val subtitles: List<VideoSubtitle>?
     )
 
     @Serializable
-    data class InfoResponse(
-        @SerialName("id") val id: String,
-        @SerialName("title") val title: String,
-        @SerialName("description") val description: String,
-        @SerialName("episodes") val episodes: ArrayList<ConsumeBiliEpisode>,
-        @SerialName("totalEpisodes") val totalEpisodes: Int?,
+    data class VideoSource(
+        @SerialName("file") val file: String,
+        @SerialName("label") val label: String?,
+        @SerialName("useProxy") val useProxy: Boolean?,
+        @SerialName("proxy") val proxy: Proxy?,
+        @SerialName("type") val type: String?
     )
 
     @Serializable
-    data class WatchResponse(
-        @SerialName("sources") val sources: ArrayList<ConsumeBiliSource>,
-        @SerialName("subtitles") val subtitles: ArrayList<ConsumeBiliSubtitle>
+    data class Proxy(
+        @SerialName("appendReqHeaders") val appendReqHeaders: Map<String, String>?
     )
 
     @Serializable
-    data class ConsumeBiliEpisode(
-        @SerialName("id") val id: String,
-        @SerialName("number") val number: Int,
-        @SerialName("title") val title: String,
-        @SerialName("image") val image: String,
-    )
-
-    @Serializable
-    data class ConsumeBiliSource(
-        @SerialName("url") val url: String,
-        @SerialName("isM3U8") val isM3U8: Boolean,
-        @SerialName("isDASH") val isDASH: Boolean
-    )
-
-    @Serializable
-    data class ConsumeBiliSubtitle(
+    data class VideoSubtitle(
+        @SerialName("file") val file: String,
         @SerialName("lang") val lang: String,
-        @SerialName("url") val url: String,
+        @SerialName("language") val language: String,
+    )
+
+    @Serializable
+    data class SourceEpisode(
+        @SerialName("name") val name: String,
+        @SerialName("sourceId") val sourceId: String,
+        @SerialName("sourceEpisodeId") val sourceEpisodeId: String,
+        @SerialName("sourceMediaId") val sourceMediaId: String,
+        @SerialName("slug") val slug: String,
+        @SerialName("sourceConnectionId") val sourceConnectionId: String,
+        @SerialName("section") val section: String
     )
 }

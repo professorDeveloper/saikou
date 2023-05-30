@@ -90,7 +90,7 @@ class HomeFragment : Fragment() {
                 binding.homeListContainer.layoutAnimation = LayoutAnimationController(setSlideIn(uiSettings), 0.25f)
             }
             else {
-                toastString("Please Reload.")
+                snackString("Please Reload.")
             }
         }
 
@@ -213,6 +213,18 @@ class HomeFragment : Fragment() {
         )
 
         initRecyclerView(
+            model.getAnimePlanned(),
+            binding.homePlannedAnimeContainer,
+            binding.homePlannedAnimeRecyclerView,
+            binding.homePlannedAnimeProgressBar,
+            binding.homePlannedAnimeEmpty,
+            binding.homePlannedAnime
+        )
+        binding.homePlannedAnimeBrowseButton.setOnClickListener {
+            bottomBar.selectTabAt(0)
+        }
+
+        initRecyclerView(
             model.getMangaContinue(),
             binding.homeContinueReadingContainer,
             binding.homeReadingRecyclerView,
@@ -232,6 +244,18 @@ class HomeFragment : Fragment() {
             binding.homeFavMangaEmpty,
             binding.homeFavManga
         )
+
+        initRecyclerView(
+            model.getMangaPlanned(),
+            binding.homePlannedMangaContainer,
+            binding.homePlannedMangaRecyclerView,
+            binding.homePlannedMangaProgressBar,
+            binding.homePlannedMangaEmpty,
+            binding.homePlannedManga
+        )
+        binding.homePlannedMangaBrowseButton.setOnClickListener {
+            bottomBar.selectTabAt(2)
+        }
 
         initRecyclerView(
             model.getRecommendation(),
@@ -256,16 +280,20 @@ class HomeFragment : Fragment() {
         val array = arrayOf(
             Runnable { runBlocking { model.setAnimeContinue() } },
             Runnable { runBlocking { model.setAnimeFav() } },
+            Runnable { runBlocking { model.setAnimePlanned() } },
             Runnable { runBlocking { model.setMangaContinue() } },
             Runnable { runBlocking { model.setMangaFav() } },
+            Runnable { runBlocking { model.setMangaPlanned() } },
             Runnable { runBlocking { model.setRecommendation() } }
         )
 
         val containers = arrayOf(
             binding.homeContinueWatchingContainer,
             binding.homeFavAnimeContainer,
+            binding.homePlannedAnimeContainer,
             binding.homeContinueReadingContainer,
             binding.homeFavMangaContainer,
+            binding.homePlannedMangaContainer,
             binding.homeRecommendedContainer
         )
 

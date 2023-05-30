@@ -71,10 +71,12 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
                         binding.selectorCancel.setOnClickListener {
                             media!!.selected!!.server = null
                             model.saveSelected(media!!.id, media!!.selected!!, requireActivity())
-                            dismiss()
+                            tryWith {
+                                dismiss()
+                            }
                         }
                         fun fail() {
-                            toastString("Couldn't auto select the server, Please try again!")
+                            snackString("Couldn't auto select the server, Please try again!")
                             binding.selectorCancel.performClick()
                         }
 
@@ -150,15 +152,16 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     fun startExoplayer(media: Media) {
         prevEpisode = null
 
         dismiss()
         if (launch!!) {
             stopAddingToList()
-            val intent = Intent(activity, ExoplayerView::class.java).apply {
-                putExtra("media", media)
-            }
+            val intent = Intent(activity, ExoplayerView::class.java)
+            ExoplayerView.media = media
+            ExoplayerView.initialized = true
             startActivity(intent)
         } else {
             model.setEpisode(media.anime!!.episodes!![media.anime.selectedEpisode!!]!!, "startExo no launch")
@@ -216,26 +219,28 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
             binding.urlQuality.text = if(video.quality!=null) "${video.quality}p" else "Default Quality"
             binding.urlNote.text = video.extraNote ?: ""
             binding.urlNote.visibility = if (video.extraNote != null) View.VISIBLE else View.GONE
+            binding.urlDownload.visibility = View.VISIBLE
+            binding.urlDownload.setSafeOnClickListener {
+                media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedExtractor = extractor.server.name
+                media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedVideo = position
+                binding.urlDownload.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                download(
+                    requireActivity(),
+                    media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!,
+                    media!!.userPreferredName
+                )
+                dismiss()
+            }
             if (video.format == VideoType.CONTAINER) {
                 binding.urlSize.visibility = if (video.size != null) View.VISIBLE else View.GONE
                 binding.urlSize.text =
                     (if (video.extraNote != null) " : " else "") + DecimalFormat("#.##").format(video.size ?: 0).toString() + " MB"
-                binding.urlDownload.visibility = View.VISIBLE
-                binding.urlDownload.setSafeOnClickListener {
-                    media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedExtractor = extractor.server.name
-                    media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedVideo = position
-                    binding.urlDownload.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                    download(
-                        requireActivity(),
-                        media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!,
-                        media!!.userPreferredName
-                    )
-                    dismiss()
-                }
             }
             else {
                 binding.urlQuality.text = "Multi Quality"
-                binding.urlDownload.visibility = View.GONE
+                if ((loadData<Int>("settings_download_manager") ?: 0) == 0) {
+                    binding.urlDownload.visibility = View.GONE
+                }
             }
         }
 
@@ -244,21 +249,23 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
         private inner class UrlViewHolder(val binding: ItemUrlBinding) : RecyclerView.ViewHolder(binding.root) {
             init {
                 itemView.setSafeOnClickListener {
-                    media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]?.selectedExtractor = extractor.server.name
-                    media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]?.selectedVideo = bindingAdapterPosition
-                    if (makeDefault) {
-                        media!!.selected!!.server = extractor.server.name
-                        media!!.selected!!.video = bindingAdapterPosition
-                        model.saveSelected(media!!.id, media!!.selected!!, requireActivity())
+                    tryWith(true) {
+                        media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]?.selectedExtractor = extractor.server.name
+                        media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]?.selectedVideo = bindingAdapterPosition
+                        if (makeDefault) {
+                            media!!.selected!!.server = extractor.server.name
+                            media!!.selected!!.video = bindingAdapterPosition
+                            model.saveSelected(media!!.id, media!!.selected!!, requireActivity())
+                        }
+                        startExoplayer(media!!)
                     }
-                    startExoplayer(media!!)
                 }
                 itemView.setOnLongClickListener {
                     val video = extractor.videos[bindingAdapterPosition]
                     val intent= Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(Uri.parse(video.url.url),"video/*")
+                        setDataAndType(Uri.parse(video.file.url),"video/*")
                     }
-                    copyToClipboard(video.url.url,true)
+                    copyToClipboard(video.file.url,true)
                     dismiss()
                     startActivity(Intent.createChooser(intent,"Open Video in :"))
                     true
@@ -282,7 +289,6 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
 
     override fun onDismiss(dialog: DialogInterface) {
         if (launch == false) {
-            @Suppress("DEPRECATION")
             activity?.hideSystemBars()
             model.epChanged.postValue(true)
             if (prevEpisode != null) {

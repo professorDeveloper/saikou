@@ -6,9 +6,11 @@ import android.view.View
 import android.view.View.GONE
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.HORIZONTAL
+import androidx.recyclerview.widget.RecyclerView.VERTICAL
 import ani.saikou.BottomSheetDialogFragment
 import ani.saikou.R
 import ani.saikou.anilist.Anilist
@@ -76,11 +78,8 @@ class SearchFilterBottomDialog(
             )
         )
 
-        if(activity.result.type=="MANGA"){
-            binding.searchSeason.visibility = GONE
-            binding.searchYear.visibility = GONE
-        }
-        else{
+        if (activity.result.type == "MANGA") binding.searchSeasonYearCont.visibility = GONE
+        else {
             binding.searchSeason.setText(activity.result.season)
             binding.searchSeason.setAdapter(
                 ArrayAdapter(
@@ -105,12 +104,11 @@ class SearchFilterBottomDialog(
             chip.isChecked = selectedGenres.contains(genre)
             chip.isCloseIconVisible = exGenres.contains(genre)
             chip.setOnCheckedChangeListener { _, isChecked ->
-                if(isChecked){
+                if (isChecked) {
                     chip.isCloseIconVisible = false
                     exGenres.remove(genre)
                     selectedGenres.add(genre)
-                }
-                else
+                } else
                     selectedGenres.remove(genre)
             }
             chip.setOnLongClickListener {
@@ -119,19 +117,23 @@ class SearchFilterBottomDialog(
                 exGenres.add(genre)
             }
         }
-        binding.searchFilterGenres.layoutManager = LinearLayoutManager(binding.root.context, HORIZONTAL, false)
+        binding.searchGenresGrid.setOnCheckedChangeListener { _, isChecked ->
+            binding.searchFilterGenres.layoutManager =
+                if (!isChecked) LinearLayoutManager(binding.root.context, HORIZONTAL, false)
+                else GridLayoutManager(binding.root.context, 2, VERTICAL, false)
+        }
+        binding.searchGenresGrid.isChecked = false
 
         binding.searchFilterTags.adapter = FilterChipAdapter(Anilist.tags?.get(activity.result.isAdult) ?: listOf()) { chip ->
             val tag = chip.text.toString()
             chip.isChecked = selectedTags.contains(tag)
             chip.isCloseIconVisible = exTags.contains(tag)
             chip.setOnCheckedChangeListener { _, isChecked ->
-                if(isChecked){
+                if (isChecked) {
                     chip.isCloseIconVisible = false
                     exTags.remove(tag)
                     selectedTags.add(tag)
-                }
-                else
+                } else
                     selectedTags.remove(tag)
             }
             chip.setOnLongClickListener {
@@ -140,7 +142,12 @@ class SearchFilterBottomDialog(
                 exTags.add(tag)
             }
         }
-        binding.searchFilterTags.layoutManager = LinearLayoutManager(binding.root.context, HORIZONTAL, false)
+        binding.searchTagsGrid.setOnCheckedChangeListener { _, isChecked ->
+            binding.searchFilterTags.layoutManager =
+                if (!isChecked) LinearLayoutManager(binding.root.context, HORIZONTAL, false)
+                else GridLayoutManager(binding.root.context, 2, VERTICAL, false)
+        }
+        binding.searchTagsGrid.isChecked = false
     }
 
 

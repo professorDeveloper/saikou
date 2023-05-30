@@ -1,13 +1,11 @@
 package ani.saikou.manga.mangareader
 
 import android.animation.ObjectAnimator
-import android.graphics.BitmapFactory
-import android.graphics.drawable.Drawable
-import android.net.Uri
+import android.content.res.Resources.getSystem
+import android.graphics.Bitmap
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.R
@@ -16,17 +14,11 @@ import ani.saikou.manga.MangaChapter
 import ani.saikou.settings.CurrentReaderSettings.Directions.LEFT_TO_RIGHT
 import ani.saikou.settings.CurrentReaderSettings.Directions.RIGHT_TO_LEFT
 import ani.saikou.settings.CurrentReaderSettings.Layouts.PAGED
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.model.GlideUrl
-import com.bumptech.glide.request.target.CustomViewTarget
-import com.bumptech.glide.request.target.Target
-import com.bumptech.glide.request.transition.Transition
+import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import java.io.File
 
-
-class ImageAdapter(
+open class ImageAdapter(
     activity: MangaReaderActivity,
     chapter: MangaChapter
 ) : BaseImageAdapter(activity, chapter) {
@@ -38,47 +30,59 @@ class ImageAdapter(
 
     inner class ImageViewHolder(binding: ItemImageBinding) : RecyclerView.ViewHolder(binding.root)
 
-    override fun loadImage(position: Int, parent: View): Boolean {
+    open suspend fun loadBitmap(position: Int, parent: View) : Bitmap? {
+        val link = images.getOrNull(position)?.url ?: return null
+        if (link.url.isEmpty()) return null
+
+        val transforms = mutableListOf<BitmapTransformation>()
+        val parserTransformation = activity.getTransformation(images[position])
+
+        if(parserTransformation!=null) transforms.add(parserTransformation)
+        if(settings.cropBorders) {
+            transforms.add(RemoveBordersTransformation(true, settings.cropBorderThreshold))
+            transforms.add(RemoveBordersTransformation(false, settings.cropBorderThreshold))
+        }
+
+        return activity.loadBitmap(link, transforms)
+    }
+
+    override suspend fun loadImage(position: Int, parent: View): Boolean {
         val imageView = parent.findViewById<SubsamplingScaleImageView>(R.id.imgProgImageNoGestures) ?: return false
         val progress = parent.findViewById<View>(R.id.imgProgProgress) ?: return false
         imageView.recycle()
         imageView.visibility = View.GONE
 
-        val link = images[position].url
-        val trans = activity.getTransformation(images[position])
+        val bitmap = loadBitmap(position, parent) ?: return false
 
-        if (link.url.isEmpty()) return false
-        Glide.with(imageView).download(GlideUrl(link.url) { link.headers })
-            .override(Target.SIZE_ORIGINAL)
-            .apply {
-                val target = object : CustomViewTarget<SubsamplingScaleImageView, File>(imageView) {
-                    override fun onLoadFailed(errorDrawable: Drawable?) {
-                        progress.visibility = View.GONE
-                    }
+        var sWidth = getSystem().displayMetrics.widthPixels
+        var sHeight = getSystem().displayMetrics.heightPixels
 
-                    override fun onResourceCleared(placeholder: Drawable?) {}
-
-                    override fun onResourceReady(resource: File, transition: Transition<in File>?) {
-                        imageView.visibility = View.VISIBLE
-                        val bitmap = if(settings.wrapImages) BitmapFactory.decodeFile(resource.absolutePath, BitmapFactory.Options()) else null
-                        if (settings.layout != PAGED)
-                            parent.updateLayoutParams {
-                                if (settings.direction != LEFT_TO_RIGHT && settings.direction != RIGHT_TO_LEFT)
-                                    height = bitmap?.height ?: WRAP_CONTENT
-                                else
-                                    width = bitmap?.width ?: WRAP_CONTENT
-                            }
-                        view.setImage(ImageSource.uri(Uri.fromFile(resource)))
-                        ObjectAnimator.ofFloat(parent, "alpha", 0f, 1f).setDuration((400 * uiSettings.animationSpeed).toLong())
-                            .start()
-                        progress.visibility = View.GONE
-                    }
+        if (settings.layout != PAGED)
+            parent.updateLayoutParams {
+                if (settings.direction != LEFT_TO_RIGHT && settings.direction != RIGHT_TO_LEFT) {
+                    sHeight = if (settings.wrapImages) bitmap.height else (sWidth * bitmap.height * 1f / bitmap.width).toInt()
+                    height = sHeight
+                } else {
+                    sWidth = if (settings.wrapImages) bitmap.width else (sHeight * bitmap.width * 1f / bitmap.height).toInt()
+                    width = sWidth
                 }
-                if (trans != null)
-                    transform(File::class.java, trans).into(target)
-                else
-                    into(target)
             }
+
+        imageView.visibility = View.VISIBLE
+        imageView.setImage(ImageSource.cachedBitmap(bitmap))
+
+        val parentArea = sWidth * sHeight * 1f
+        val bitmapArea = bitmap.width * bitmap.height * 1f
+        val scale = if (parentArea < bitmapArea) (bitmapArea / parentArea) else (parentArea / bitmapArea)
+
+        imageView.maxScale = scale * 1.1f
+        imageView.minScale = scale
+
+        ObjectAnimator.ofFloat(parent, "alpha", 0f, 1f)
+            .setDuration((400 * uiSettings.animationSpeed).toLong())
+            .start()
+        progress.visibility = View.GONE
+
         return true
     }
 

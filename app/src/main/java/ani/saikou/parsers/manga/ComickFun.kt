@@ -6,7 +6,6 @@ import ani.saikou.parsers.MangaChapter
 import ani.saikou.parsers.MangaImage
 import ani.saikou.parsers.MangaParser
 import ani.saikou.parsers.ShowResponse
-import ani.saikou.toast
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -14,35 +13,38 @@ class ComickFun : MangaParser() {
 
     override val name = "ComickFun"
     override val saveName = "comick_fun"
-    override val hostUrl = "https://api.comick.fun"
+    override val hostUrl = "https://api.comick.app"
+    private val imgUrl = "https://meo.comick.pictures/"
 
     override suspend fun search(query: String): List<ShowResponse> {
-        val resp = Mapper.parse<List<SearchData>>(client.get("https://api.comick.fun/search?q=${encode(query)}&tachiyomi=true").text)
+        val resp = Mapper.parse<List<SearchDatum>>(client.get("$hostUrl/search?q=${encode(query)}&tachiyomi=true").text)
         return resp.map { manga ->
-            val mangaLink = "$hostUrl/comic/${manga.id}/chapter?tachiyomi=true"
-            ShowResponse(
-                name = manga.title, link = mangaLink, coverUrl = manga.cover_url, otherNames = manga.md_titles.map { it.title },
-                extra = mapOf("slug" to manga.slug)
-            ) // need this slug for loadChapters
+            val mangaLink = "$hostUrl/comic/${manga.hid}/chapters?lang=en&chap-order=1"
+            val coverLink = "$imgUrl${manga.mdCovers[0].b2Key}"
+            ShowResponse(manga.title,mangaLink, coverLink)
         }
     }
 
     override suspend fun loadChapters(mangaLink: String, extra: Map<String, String>?): List<MangaChapter> {
-        // You only need "hid" from here
-        val resp = client.get(mangaLink).parsed<MangaChapterData>()
-        // Contains other languages too. So filter it
-        val filtered = resp.chapters.filter { chapter -> chapter.lang == "en" }
-        val buildManifestId = getBuildManifest()
-        // Maybe useful in future if website changes/breaks
-        if (buildManifestId == null) {
-            toast("getBuildManifest() returned null")
+        val initialRes = client.get(mangaLink).parsed<MangaChapterData>()
+        val responses = mutableListOf(initialRes.chapters)
+        var parsedChapters = initialRes.chapters.count()
+        var pageNum = 1
+
+        while (parsedChapters < (initialRes.totalChapters.toIntOrNull() ?: 0)) {
+            try {
+                val res = client.get(mangaLink + "&page=${++pageNum}").parsed<MangaChapterData>()
+                responses += res.chapters
+                parsedChapters += res.chapters.count()
+            } catch (e: Exception) {
+                break
+            }
         }
-        val weirdUrl =
-            "https://comick.fun/_next/data/${buildManifestId}/comic/${extra!!["slug"]}/${filtered[0].hid}-chapter-0-en.json"
-        val secondResp = Mapper.parse<WeirdUrlData>(client.get(weirdUrl).text)
-        return secondResp.pageProps.chapters.reversed().map {
+
+        return responses.flatten().mapNotNull {
+            if ((it.chap ?: "").isBlank()) return@mapNotNull null
             val chapterLink = "$hostUrl/chapter/${it.hid}?tachiyomi=true"
-            MangaChapter(number = it.chap.toString(), link = chapterLink, title = null)
+            MangaChapter(number = it.chap.toString(), link = chapterLink, title = it.title)
         }
     }
 
@@ -51,64 +53,33 @@ class ComickFun : MangaParser() {
         return resp.chapter.images.map { MangaImage(url = it.url) }
     }
 
-    companion object {
-
-        private var lastChecked = 0L
-        private var buildManifestId: String? = null
-
-        private suspend fun getBuildManifest(): String? {
-            buildManifestId =
-                if (buildManifestId != null && (lastChecked - System.currentTimeMillis()) < 1000 * 60 * 30) buildManifestId
-                else {
-                    lastChecked = System.currentTimeMillis()
-                    val document = client.get("https://comick.fun/").text
-                    val buildIdRe = Regex("buildId\":\"(.+?)\"")
-                    buildIdRe.find(document, 0)?.groupValues?.get(1)
-                }
-            return buildManifestId
-        }
-
-    }
-
     @Serializable
-    private data class WeirdUrlData(@SerialName("pageProps") val pageProps: Data) {
-
-        @Serializable
-        data class Data(@SerialName("chapters") val chapters: List<Chapter>) {
-
-            @Serializable
-            data class Chapter(
-                @SerialName("chap") val chap: String?, // chapter number
-                @SerialName("hid") val hid: String,
-            )
-        }
-    }
-
-    @Serializable
-    private data class SearchData(
-        @SerialName("title") val title: String,
-        @SerialName("id") val id: Int,
-        @SerialName("slug") val slug: String,
-        @SerialName("md_titles") val md_titles: List<MdTitles>, // other titles
-        @SerialName("cover_url") val cover_url: String,
+    data class SearchDatum (
+        val title: String,
+        val hid: String,
+        @SerialName("md_covers")
+        val mdCovers: List<MdCover>,
     ) {
         @Serializable
-        data class MdTitles(
-            @SerialName("title") val title: String,
+        data class MdCover(
+            @SerialName("b2key")
+            val b2Key: String? = null
         )
     }
 
     @Serializable
     private data class MangaChapterData(
-        @SerialName("chapters") val chapters: List<Chap>
+        @SerialName("chapters") val chapters: List<Chap>,
+        @SerialName("total") val totalChapters: String
     )
 
     @Serializable
     private data class Chap(
-        @SerialName("chap") val chap: String?,  // chapter number
-        @SerialName("title") val title: String?,
-        @SerialName("lang") val lang: String?,  // may contain other lang too, so filter "en" using this
-        @SerialName("hid") val hid: String,
+        val chap: String? = null,
+        val title: String? = null,
+        val vol: String? = null,
+        val lang: String? = null,
+        val hid: String? = null,
     )
 
     @Serializable

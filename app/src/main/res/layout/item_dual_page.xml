@@ -2,40 +2,39 @@
 <com.alexvasilkov.gestures.views.GestureFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     app:gest_disableGestures="true"
-    app:gest_restrictRotation="true"
     app:gest_doubleTapZoom="4"
-    app:gest_maxZoom="8">
+    app:gest_maxZoom="8"
+    app:gest_restrictRotation="true">
 
     <FrameLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:baselineAligned="false"
-            android:gravity="center"
             android:orientation="horizontal">
 
             <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:layout_weight="1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:background="@color/bg"
                 android:focusable="false">
 
                 <ani.saikou.NoGestureSubsamplingImageView
                     android:id="@+id/imgProgImageNoGestures2"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:adjustViewBounds="true"
                     android:focusable="false"
-                    android:scaleType="fitCenter"
+                    android:visibility="gone"
+                    app:zoomEnabled="false"
+                    app:panEnabled="false"
                     tools:ignore="ContentDescription,ImageContrastCheck"
                     tools:src="@tools:sample/backgrounds/scenic[0]" />
 
@@ -45,26 +44,26 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:layout_margin="64dp"
                     android:visibility="visible" />
 
             </FrameLayout>
 
             <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:layout_weight="1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:background="@color/bg"
                 android:focusable="false">
 
                 <ani.saikou.NoGestureSubsamplingImageView
                     android:id="@+id/imgProgImageNoGestures1"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:adjustViewBounds="true"
                     android:focusable="false"
-                    android:scaleType="fitCenter"
+                    android:visibility="gone"
+                    app:zoomEnabled="false"
+                    app:panEnabled="false"
                     tools:ignore="ContentDescription,ImageContrastCheck"
                     tools:src="@tools:sample/backgrounds/scenic[0]" />
 
@@ -74,6 +73,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:layout_margin="64dp"
                     android:visibility="visible" />
 
             </FrameLayout>

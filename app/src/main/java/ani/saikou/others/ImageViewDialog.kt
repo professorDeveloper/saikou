@@ -1,25 +1,19 @@
 package ani.saikou.others
 
 import android.animation.ObjectAnimator
-import android.graphics.BitmapFactory
-import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
 import ani.saikou.*
 import ani.saikou.databinding.BottomSheetImageBinding
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.Transformation
-import com.bumptech.glide.load.model.GlideUrl
-import com.bumptech.glide.request.target.CustomViewTarget
-import com.bumptech.glide.request.target.Target
-import com.bumptech.glide.request.transition.Transition
+import ani.saikou.manga.mangareader.BaseImageAdapter.Companion.loadBitmap
+import ani.saikou.manga.mangareader.BaseImageAdapter.Companion.mergeBitmap
+import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import com.davemorrissey.labs.subscaleview.ImageSource
-import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import java.io.File
+import kotlinx.coroutines.launch
 
 class ImageViewDialog : BottomSheetDialogFragment() {
 
@@ -29,16 +23,19 @@ class ImageViewDialog : BottomSheetDialogFragment() {
     private var reload = false
     private var _title: String? = null
     private var _image: FileUrl? = null
+    private var _image2: FileUrl? = null
 
     var onReloadPressed: ((ImageViewDialog) -> Unit)? = null
-    var trans: Transformation<File>? = null
+    var trans1: List<BitmapTransformation>? = null
+    var trans2: List<BitmapTransformation>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             _title = it.getString("title")?.replace(Regex("[\\\\/:*?\"<>|]"), "")
             reload = it.getBoolean("reload")
-            _image = it.getSerializable("image") as FileUrl
+            _image = it.getSerialized("image")!!
+            _image2 = it.getSerialized("image2")
         }
     }
 
@@ -48,10 +45,10 @@ class ImageViewDialog : BottomSheetDialogFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val (title, image) = (_title to _image)
+        val (title, image, image2) = Triple(_title, _image, _image2)
         if (image == null || title == null) {
             dismiss()
-            toastString("Error getting Image Data")
+            snackString("Error getting Image Data")
             return
         }
         if (reload) {
@@ -61,64 +58,40 @@ class ImageViewDialog : BottomSheetDialogFragment() {
             }
         }
 
-        var uri: Uri? = null
-
-        binding.bottomImageSave.setOnClickListener {
-            uri?.let {
-                saveImageToDownloads(
-                    title,
-                    BitmapFactory.decodeFile(it.path, BitmapFactory.Options()),
-                    requireActivity()
-                )
-            }
-        }
-
-        binding.bottomImageShare.setOnClickListener {
-            uri?.let {
-                shareImage(
-                    title,
-                    BitmapFactory.decodeFile(it.path, BitmapFactory.Options()),
-                    requireContext()
-                )
-            }
-        }
-
         binding.bottomImageTitle.text = title
-
-        binding.bottomImageShare.setOnLongClickListener {
+        binding.bottomImageReload.setOnLongClickListener {
             openLinkInBrowser(image.url)
+            if (image2 != null) openLinkInBrowser(image2.url)
             true
         }
 
+        lifecycleScope.launch {
+            val binding = _binding ?: return@launch
 
-        Glide.with(this).download(GlideUrl(image.url) { image.headers })
-            .override(Target.SIZE_ORIGINAL)
-            .apply {
-                val target = object : CustomViewTarget<SubsamplingScaleImageView, File>(binding.bottomImageView) {
-                    override fun onLoadFailed(errorDrawable: Drawable?) {
-                        toastString("Loading Image Failed")
-                        binding.bottomImageProgress.visibility = View.GONE
-                    }
+            var bitmap = requireContext().loadBitmap(image, trans1 ?: listOf())
+            val bitmap2 = if (image2 != null) requireContext().loadBitmap(image2, trans2 ?: listOf()) else null
 
-                    override fun onResourceCleared(placeholder: Drawable?) {}
+            bitmap = if (bitmap2 != null && bitmap != null) mergeBitmap(bitmap, bitmap2,) else bitmap
 
-                    override fun onResourceReady(resource: File, transition: Transition<in File>?) {
-                        uri = Uri.fromFile(resource)
-                        binding.bottomImageShare.isEnabled = true
-                        binding.bottomImageSave.isEnabled = true
-
-                        binding.bottomImageView.setImage(ImageSource.uri(uri!!))
-                        ObjectAnimator.ofFloat(binding.bottomImageView, "alpha", 0f, 1f).setDuration(400L).start()
-                        binding.bottomImageProgress.visibility = View.GONE
-                    }
+            if (bitmap != null) {
+                binding.bottomImageShare.isEnabled = true
+                binding.bottomImageSave.isEnabled = true
+                binding.bottomImageSave.setOnClickListener {
+                    saveImageToDownloads(title, bitmap, requireActivity())
                 }
-                trans?.let {
-                    transform(File::class.java, it)
+                binding.bottomImageShare.setOnClickListener {
+                    shareImage(title, bitmap, requireContext())
                 }
-                into(target)
+
+                binding.bottomImageView.setImage(ImageSource.cachedBitmap(bitmap))
+                ObjectAnimator.ofFloat(binding.bottomImageView, "alpha", 0f, 1f).setDuration(400L).start()
+                binding.bottomImageProgress.visibility = View.GONE
+            } else {
+                toast("Loading Image Failed")
+                binding.bottomImageNo.visibility = View.VISIBLE
+                binding.bottomImageProgress.visibility = View.GONE
             }
-
-
+        }
     }
 
     override fun onDestroy() {
@@ -127,11 +100,12 @@ class ImageViewDialog : BottomSheetDialogFragment() {
     }
 
     companion object {
-        fun newInstance(title: String, image: FileUrl, showReload: Boolean = false) = ImageViewDialog().apply {
+        fun newInstance(title: String, image: FileUrl, showReload: Boolean = false, image2: FileUrl?) = ImageViewDialog().apply {
             arguments = Bundle().apply {
                 putString("title", title)
                 putBoolean("reload", showReload)
                 putSerializable("image", image)
+                putSerializable("image2", image2)
             }
         }
 

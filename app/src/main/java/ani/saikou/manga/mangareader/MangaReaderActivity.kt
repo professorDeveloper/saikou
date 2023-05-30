@@ -11,6 +11,7 @@ import android.view.*
 import android.view.KeyEvent.*
 import android.view.animation.OvershootInterpolator
 import android.widget.AdapterView
+import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.math.MathUtils.clamp
@@ -28,22 +29,21 @@ import ani.saikou.manga.MangaChapter
 import ani.saikou.media.Media
 import ani.saikou.media.MediaDetailsViewModel
 import ani.saikou.others.ImageViewDialog
+import ani.saikou.others.getSerialized
 import ani.saikou.parsers.HMangaSources
 import ani.saikou.parsers.MangaImage
 import ani.saikou.parsers.MangaSources
 import ani.saikou.settings.CurrentReaderSettings.Companion.applyWebtoon
 import ani.saikou.settings.CurrentReaderSettings.Directions.*
 import ani.saikou.settings.CurrentReaderSettings.DualPageModes.*
-import ani.saikou.settings.CurrentReaderSettings.Layouts.CONTINUOUS_PAGED
-import ani.saikou.settings.CurrentReaderSettings.Layouts.PAGED
+import ani.saikou.settings.CurrentReaderSettings.Layouts.*
 import ani.saikou.settings.ReaderSettings
 import ani.saikou.settings.UserInterfaceSettings
 import com.alexvasilkov.gestures.views.GestureFrameLayout
-import com.bumptech.glide.load.Transformation
+import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
 import java.util.*
 import kotlin.math.min
 import kotlin.properties.Delegates
@@ -106,7 +106,11 @@ class MangaReaderActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.mangaReaderBack.setOnClickListener {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
+        }
+
+        onBackPressedDispatcher.addCallback(this) {
+            progress { finish() }
         }
 
         settings = loadData("reader_settings", this) ?: ReaderSettings().apply { saveData("reader_settings", this) }
@@ -144,7 +148,7 @@ class MangaReaderActivity : AppCompatActivity() {
 
         media = if (model.getMedia().value == null)
             try {
-                (intent.getSerializableExtra("media") as? Media) ?: return
+                (intent.getSerialized("media")) ?: return
             } catch (e: Exception) {
                 logError(e)
                 return
@@ -181,10 +185,8 @@ class MangaReaderActivity : AppCompatActivity() {
                         arrayOf("Don't ask again for ${media.userPreferredName}"),
                         booleanArrayOf(false)
                     ) { _, _, isChecked ->
-                        if (isChecked) {
-                            saveData("${media.id}_progressDialog", isChecked)
-                            progressDialog = null
-                        }
+                        if (isChecked) progressDialog = null
+                        saveData("${media.id}_progressDialog", isChecked)
                         showProgressDialog = isChecked
                     }
                     setOnCancelListener { hideBars() }
@@ -194,10 +196,7 @@ class MangaReaderActivity : AppCompatActivity() {
         //Chapter Change
         fun change(index: Int) {
             saveData("${media.id}_${chaptersArr[currentChapterIndex]}", currentChapterPage, this)
-            maxChapterPage = 0
-            media.manga!!.selectedChapter = chaptersArr[index]
-            model.setMedia(media)
-            scope.launch(Dispatchers.IO) { model.loadMangaChapterImages(chapters[chaptersArr[index]]!!, media.selected!!) }
+            ChapterLoaderDialog.newInstance(chapters[chaptersArr[index]]!!).show(supportFragmentManager, "dialog")
         }
 
         //ChapterSelector
@@ -221,7 +220,7 @@ class MangaReaderActivity : AppCompatActivity() {
         }
         binding.mangaReaderNextChapter.setOnClickListener {
             if (chaptersArr.size > currentChapterIndex + 1) progress { change(currentChapterIndex + 1) }
-            else toastString("Next Chapter Not Found")
+            else snackString("Next Chapter Not Found")
         }
         //Prev Chapter
         binding.mangaReaderPrevChap.setOnClickListener {
@@ -229,32 +228,29 @@ class MangaReaderActivity : AppCompatActivity() {
         }
         binding.mangaReaderPreviousChapter.setOnClickListener {
             if (currentChapterIndex > 0) change(currentChapterIndex - 1)
-            else toastString("This is the 1st Chapter!")
+            else snackString("This is the 1st Chapter!")
         }
 
-        val chapterObserverRunnable = Runnable {
-            model.getMangaChapter().observe(this) {
-                if (it != null) {
-                    chapter = it
-                    media.selected = model.loadSelected(media)
-                    saveData("${media.id}_current_chp", it.number, this)
-                    currentChapterIndex = chaptersArr.indexOf(it.number)
-                    binding.mangaReaderChapterSelect.setSelection(currentChapterIndex)
-                    binding.mangaReaderNextChap.text = chaptersTitleArr.getOrNull(currentChapterIndex + 1) ?: ""
-                    binding.mangaReaderPrevChap.text = chaptersTitleArr.getOrNull(currentChapterIndex - 1) ?: ""
-
-                    applySettings()
-                }
+        model.getMangaChapter().observe(this) {
+            if (it != null) {
+                chapter = it
+                media.manga!!.selectedChapter = chapter.number
+                media.selected = model.loadSelected(media)
+                saveData("${media.id}_current_chp", it.number, this)
+                currentChapterIndex = chaptersArr.indexOf(it.number)
+                binding.mangaReaderChapterSelect.setSelection(currentChapterIndex)
+                binding.mangaReaderNextChap.text = chaptersTitleArr.getOrNull(currentChapterIndex + 1) ?: ""
+                binding.mangaReaderPrevChap.text = chaptersTitleArr.getOrNull(currentChapterIndex - 1) ?: ""
+                applySettings()
             }
         }
-        chapterObserverRunnable.run()
 
         scope.launch(Dispatchers.IO) { model.loadMangaChapterImages(chapter, media.selected!!) }
     }
 
     private val snapHelper = PagerSnapHelper()
 
-    private fun <T> dualPage(callback: () -> T): T? {
+    fun <T> dualPage(callback: () -> T): T? {
         return when (settings.default.dualPageMode) {
             No        -> null
             Automatic -> {
@@ -268,6 +264,7 @@ class MangaReaderActivity : AppCompatActivity() {
 
     @SuppressLint("ClickableViewAccessibility")
     fun applySettings() {
+
         saveData("${media.id}_current_settings", settings.default)
         hideBars()
 
@@ -285,9 +282,10 @@ class MangaReaderActivity : AppCompatActivity() {
 
         currentChapterPage = loadData("${media.id}_${chapter.number}", this) ?: 1
 
-        val chapImages = chapter.images
+        val chapImages = chapter.images()
 
-        if (!chapImages.isNullOrEmpty()) {
+        maxChapterPage = 0
+        if (chapImages.isNotEmpty()) {
             maxChapterPage = chapImages.size.toLong()
             saveData("${media.id}_${chapter.number}_max", maxChapterPage)
 
@@ -342,27 +340,25 @@ class MangaReaderActivity : AppCompatActivity() {
                     translationY = height.dp * (1 - min(value, 1f))
                 }
             }
-        }
-        else {
+        } else {
             binding.mangaReaderSwipy.vertical = false
             if (settings.default.direction == RIGHT_TO_LEFT) {
                 binding.LeftSwipeText.text = chaptersTitleArr.getOrNull(currentChapterIndex + 1) ?: "No Chapter"
                 binding.RightSwipeText.text = chaptersTitleArr.getOrNull(currentChapterIndex - 1) ?: "No Chapter"
-                binding.mangaReaderSwipy.onRightSwiped = {
-                    binding.mangaReaderPreviousChapter.performClick()
-                }
                 binding.mangaReaderSwipy.onLeftSwiped = {
                     binding.mangaReaderNextChapter.performClick()
                 }
-            }
-            else {
-                binding.RightSwipeText.text = chaptersTitleArr.getOrNull(currentChapterIndex + 1) ?: "No Chapter"
+                binding.mangaReaderSwipy.onRightSwiped = {
+                    binding.mangaReaderPreviousChapter.performClick()
+                }
+            } else {
                 binding.LeftSwipeText.text = chaptersTitleArr.getOrNull(currentChapterIndex - 1) ?: "No Chapter"
+                binding.RightSwipeText.text = chaptersTitleArr.getOrNull(currentChapterIndex + 1) ?: "No Chapter"
                 binding.mangaReaderSwipy.onLeftSwiped = {
-                    binding.mangaReaderNextChapter.performClick()
+                    binding.mangaReaderPreviousChapter.performClick()
                 }
                 binding.mangaReaderSwipy.onRightSwiped = {
-                    binding.mangaReaderPreviousChapter.performClick()
+                    binding.mangaReaderNextChapter.performClick()
                 }
             }
             binding.mangaReaderSwipy.leftBeingSwiped = { value ->
@@ -385,23 +381,29 @@ class MangaReaderActivity : AppCompatActivity() {
             binding.mangaReaderRecyclerContainer.controller.settings.isRotationEnabled = settings.default.rotation
 
             val detector = GestureDetectorCompat(this, object : GesturesListener() {
-                override fun onLongPress(e: MotionEvent?) {
-                    if (e!=null && binding.mangaReaderRecycler.findChildViewUnder(e.x, e.y).let { child ->
+                override fun onLongPress(e: MotionEvent) {
+                    if (binding.mangaReaderRecycler.findChildViewUnder(e.x, e.y).let { child ->
                             child ?: return@let false
                             val pos = binding.mangaReaderRecycler.getChildAdapterPosition(child)
-                            val image = chapImages?.getOrNull(pos) ?: return@let false
-
-                            onImageLongClicked(pos, image) { dialog ->
-                                imageAdapter?.loadImage(pos, child as GestureFrameLayout)
+                            val callback: (ImageViewDialog) -> Unit = { dialog ->
+                                lifecycleScope.launch { imageAdapter?.loadImage(pos, child as GestureFrameLayout) }
                                 binding.mangaReaderRecycler.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                                 dialog.dismiss()
                             }
+                            dualPage {
+                                val page = chapter.dualPages().getOrNull(pos) ?: return@dualPage false
+                                val nextPage = page.second
+                                if (settings.default.direction != LEFT_TO_RIGHT && nextPage != null)
+                                    onImageLongClicked(pos * 2, nextPage, page.first, callback)
+                                else
+                                    onImageLongClicked(pos * 2, page.first, nextPage, callback)
+                            } ?: onImageLongClicked(pos, chapImages.getOrNull(pos) ?: return@let false, null, callback)
                         }
                     ) binding.mangaReaderRecycler.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                     super.onLongPress(e)
                 }
 
-                override fun onSingleClick(event: MotionEvent?) {
+                override fun onSingleClick(event: MotionEvent) {
                     handleController()
                 }
             })
@@ -424,7 +426,9 @@ class MangaReaderActivity : AppCompatActivity() {
                 adapter = imageAdapter
                 layoutManager = manager
                 setOnTouchListener { _, event ->
-                    if(event!=null) detector.onTouchEvent(event) else false
+                    if (event != null)
+                        tryWith { detector.onTouchEvent(event) } ?: false
+                    else false
                 }
 
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -468,10 +472,9 @@ class MangaReaderActivity : AppCompatActivity() {
                         smoothScrollBy(500, 0)
                 }
 
-                scrollToPosition(currentPage - 1)
+                scrollToPosition(currentPage / (dualPage { 2 } ?: 1) - 1)
             }
-        }
-        else {
+        } else {
             binding.mangaReaderRecyclerContainer.visibility = View.GONE
             binding.mangaReaderPager.apply {
                 binding.mangaReaderSwipy.child = this
@@ -488,7 +491,7 @@ class MangaReaderActivity : AppCompatActivity() {
                 registerOnPageChangeCallback(pageChangeCallback)
                 offscreenPageLimit = 5
 
-                setCurrentItem(currentPage - 1, false)
+                setCurrentItem(currentPage / (dualPage { 2 } ?: 1) - 1, false)
             }
             onVolumeUp = {
                 binding.mangaReaderPager.currentItem -= 1
@@ -614,6 +617,7 @@ class MangaReaderActivity : AppCompatActivity() {
         }
     }
 
+    var loading = false
     fun updatePageNumber(page: Long) {
         if (currentChapterPage != page) {
             currentChapterPage = page
@@ -624,13 +628,16 @@ class MangaReaderActivity : AppCompatActivity() {
                 value = clamp(currentChapterPage.toFloat(), 1f, valueTo)
             }
         }
-        if (maxChapterPage - currentChapterPage <= 1) scope.launch(Dispatchers.IO) {
-            model.loadMangaChapterImages(
-                chapters[chaptersArr.getOrNull(currentChapterIndex + 1) ?: return@launch]!!,
-                media.selected!!,
-                false
-            )
-        }
+        if (maxChapterPage - currentChapterPage <= 1 && !loading)
+            scope.launch(Dispatchers.IO) {
+                loading = true
+                model.loadMangaChapterImages(
+                    chapters[chaptersArr.getOrNull(currentChapterIndex + 1) ?: return@launch]!!,
+                    media.selected!!,
+                    false
+                )
+                loading = false
+            }
     }
 
     private fun progress(runnable: Runnable) {
@@ -659,22 +666,44 @@ class MangaReaderActivity : AppCompatActivity() {
         }
     }
 
-    fun getTransformation(mangaImage: MangaImage): Transformation<File>? {
+    fun getTransformation(mangaImage: MangaImage): BitmapTransformation? {
         return model.loadTransformation(mangaImage, media.selected!!.source)
     }
 
-    fun onImageLongClicked(pos: Int, image: MangaImage, callback: ((ImageViewDialog) -> Unit)? = null): Boolean {
-        val title = "(Page ${pos + 1}) ${chaptersTitleArr.getOrNull(currentChapterIndex)?.replace(" : "," - ") ?: ""} [${media.userPreferredName}]"
+    fun onImageLongClicked(
+        pos: Int,
+        img1: MangaImage,
+        img2: MangaImage?,
+        callback: ((ImageViewDialog) -> Unit)? = null
+    ): Boolean {
+        if (!settings.default.longClickImage) return false
+        val title = "(Page ${pos + 1}${if (img2 != null) "-${pos + 2}" else ""}) ${
+            chaptersTitleArr.getOrNull(currentChapterIndex)?.replace(" : ", " - ") ?: ""
+        } [${media.userPreferredName}]"
 
-        ImageViewDialog.newInstance(title, image.url, true).apply {
-            trans = getTransformation(image)
+        ImageViewDialog.newInstance(title, img1.url, true, img2?.url).apply {
+            val transforms1 = mutableListOf<BitmapTransformation>()
+            val parserTransformation1 = getTransformation(img1)
+            if (parserTransformation1 != null) transforms1.add(parserTransformation1)
+            val transforms2 = mutableListOf<BitmapTransformation>()
+            if (img2 != null) {
+                val parserTransformation2 = getTransformation(img2)
+                if (parserTransformation2 != null) transforms2.add(parserTransformation2)
+            }
+            val threshold = settings.default.cropBorderThreshold
+            if (settings.default.cropBorders) {
+                transforms1.add(RemoveBordersTransformation(true, threshold))
+                transforms1.add(RemoveBordersTransformation(false, threshold))
+                if (img2 != null) {
+                    transforms2.add(RemoveBordersTransformation(true, threshold))
+                    transforms2.add(RemoveBordersTransformation(false, threshold))
+                }
+            }
+            trans1 = transforms1.ifEmpty { null }
+            trans2 = transforms2.ifEmpty { null }
             onReloadPressed = callback
             show(supportFragmentManager, "image")
         }
         return true
-    }
-
-    override fun onBackPressed() {
-        progress { super.onBackPressed() }
     }
 }

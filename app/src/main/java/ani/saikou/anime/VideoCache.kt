@@ -1,11 +1,13 @@
 package ani.saikou.anime
 
 import android.content.Context
-import com.google.android.exoplayer2.database.StandaloneDatabaseProvider
-import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
-import com.google.android.exoplayer2.upstream.cache.SimpleCache
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.SimpleCache
 import java.io.File
 
+@UnstableApi
 object VideoCache {
     private var simpleCache: SimpleCache? = null
     fun getInstance(context: Context): SimpleCache {

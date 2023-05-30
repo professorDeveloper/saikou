@@ -3,9 +3,7 @@ package ani.saikou
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.Application
 import android.app.DatePickerDialog
-import android.app.DownloadManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -28,9 +26,7 @@ import android.view.*
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.animation.*
 import android.widget.*
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.ContextCompat.getExternalFilesDirs
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.FileProvider
 import androidx.core.math.MathUtils.clamp
@@ -38,36 +34,34 @@ import androidx.core.view.*
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.MutableLiveData
-import androidx.multidex.MultiDex
-import androidx.multidex.MultiDexApplication
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import ani.saikou.BuildConfig.APPLICATION_ID
 import ani.saikou.anilist.Anilist
 import ani.saikou.anilist.Genre
 import ani.saikou.anilist.api.FuzzyDate
 import ani.saikou.anime.Episode
 import ani.saikou.databinding.ItemCountDownBinding
+import ani.saikou.mal.MAL
 import ani.saikou.media.Media
-import ani.saikou.others.DisabledReports
+import ani.saikou.others.Download.adm
+import ani.saikou.others.Download.defaultDownload
+import ani.saikou.others.Download.oneDM
 import ani.saikou.parsers.ShowResponse
 import ani.saikou.settings.UserInterfaceSettings
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
-import com.google.android.exoplayer2.ui.DefaultTimeBar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.internal.ViewUtils
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import nl.joery.animatedbottombar.AnimatedBottomBar
 import java.io.*
+import java.lang.Runnable
 import java.lang.reflect.Field
 import java.util.*
 import kotlin.math.*
@@ -91,6 +85,10 @@ object Refresh {
     val activity = mutableMapOf<Int, MutableLiveData<Boolean>>()
 }
 
+fun currContext(): Context? {
+    return App.currentContext()
+}
+
 fun currActivity(): Activity? {
     return App.currentActivity()
 }
@@ -103,9 +101,9 @@ fun logger(e: Any?, print: Boolean = true) {
         println(e)
 }
 
-fun saveData(fileName: String, data: Any?, activity: Context? = null) {
+fun saveData(fileName: String, data: Any?, context: Context? = null) {
     tryWith {
-        val a = activity ?: currActivity()
+        val a = context ?: currContext()
         if (a != null) {
             val fos: FileOutputStream = a.openFileOutput(fileName, Context.MODE_PRIVATE)
             val os = ObjectOutputStream(fos)
@@ -117,8 +115,8 @@ fun saveData(fileName: String, data: Any?, activity: Context? = null) {
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <T> loadData(fileName: String, activity: Context? = null, toast: Boolean = true): T? {
-    val a = activity ?: currActivity()
+fun <T> loadData(fileName: String, context: Context? = null, toast: Boolean = true): T? {
+    val a = context ?: currContext()
     try {
         if (a?.fileList() != null)
             if (fileName in a.fileList()) {
@@ -130,7 +128,7 @@ fun <T> loadData(fileName: String, activity: Context? = null, toast: Boolean = t
                 return data
             }
     } catch (e: Exception) {
-        if (toast) toastString("Error loading data $fileName")
+        if (toast) snackString("Error loading data $fileName")
         e.printStackTrace()
     }
     return null
@@ -140,10 +138,7 @@ fun initActivity(a: Activity) {
     val window = a.window
     WindowCompat.setDecorFitsSystemWindows(window, false)
     val uiSettings = loadData<UserInterfaceSettings>("ui_settings", toast = false) ?: UserInterfaceSettings().apply {
-        saveData(
-            "ui_settings",
-            this
-        )
+        saveData("ui_settings", this)
     }
     uiSettings.darkMode.apply {
         AppCompatDelegate.setDefaultNightMode(
@@ -233,13 +228,16 @@ fun isOnline(context: Context): Boolean {
     } ?: false
 }
 
-fun startMainActivity(activity: Activity) {
+fun startMainActivity(activity: Activity, bundle: Bundle? = null) {
     activity.finishAffinity()
     activity.startActivity(
         Intent(
             activity,
             MainActivity::class.java
-        ).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+        ).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (bundle != null) putExtras(bundle)
+        }
     )
 }
 
@@ -457,96 +455,32 @@ suspend fun getSize(file: String): Double? {
 }
 
 
-class App : MultiDexApplication() {
-    override fun attachBaseContext(base: Context?) {
-        super.attachBaseContext(base)
-        MultiDex.install(this)
-    }
-
-    init {
-        instance = this
-    }
-
-    val mFTActivityLifecycleCallbacks = FTActivityLifecycleCallbacks()
-
-    override fun onCreate() {
-        super.onCreate()
-        registerActivityLifecycleCallbacks(mFTActivityLifecycleCallbacks)
-
-        Firebase.crashlytics.setCrashlyticsCollectionEnabled(!DisabledReports)
-        initializeNetwork(baseContext)
-
-    }
-
-    companion object {
-        private var instance: App? = null
-        fun currentActivity(): Activity? {
-            return instance?.mFTActivityLifecycleCallbacks?.currentActivity
-        }
-    }
-}
-
-class FTActivityLifecycleCallbacks : Application.ActivityLifecycleCallbacks {
-    var currentActivity: Activity? = null
-    override fun onActivityCreated(p0: Activity, p1: Bundle?) {}
-    override fun onActivityStarted(p0: Activity) {
-        currentActivity = p0
-    }
-
-    override fun onActivityResumed(p0: Activity) {
-        currentActivity = p0
-    }
-
-    override fun onActivityPaused(p0: Activity) {}
-    override fun onActivityStopped(p0: Activity) {}
-    override fun onActivitySaveInstanceState(p0: Activity, p1: Bundle) {}
-    override fun onActivityDestroyed(p0: Activity) {}
-}
-
-@SuppressLint("ViewConstructor")
-class ExtendedTimeBar(
-    context: Context,
-    attrs: AttributeSet?
-) : DefaultTimeBar(context, attrs) {
-    private var enabled = false
-    private var forceDisabled = false
-    override fun setEnabled(enabled: Boolean) {
-        this.enabled = enabled
-        super.setEnabled(!forceDisabled && this.enabled)
-    }
-
-    fun setForceDisabled(forceDisabled: Boolean) {
-        this.forceDisabled = forceDisabled
-        isEnabled = enabled
-    }
-}
-
 abstract class GesturesListener : GestureDetector.SimpleOnGestureListener() {
     private var timer: Timer? = null //at class level;
     private val delay: Long = 200
 
-    override fun onSingleTapUp(e: MotionEvent?): Boolean {
+    override fun onSingleTapUp(e: MotionEvent): Boolean {
         processSingleClickEvent(e)
         return super.onSingleTapUp(e)
     }
 
-    override fun onLongPress(e: MotionEvent?) {
+    override fun onLongPress(e: MotionEvent) {
         processLongClickEvent(e)
         super.onLongPress(e)
     }
 
-    override fun onDoubleTap(e: MotionEvent?): Boolean {
+    override fun onDoubleTap(e: MotionEvent): Boolean {
         processDoubleClickEvent(e)
         return super.onDoubleTap(e)
     }
 
-    override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+    override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
         onScrollYClick(distanceY)
         onScrollXClick(distanceX)
         return super.onScroll(e1, e2, distanceX, distanceY)
     }
 
-    private fun processSingleClickEvent(e: MotionEvent?) {
+    private fun processSingleClickEvent(e: MotionEvent) {
         val handler = Handler(Looper.getMainLooper())
         val mRunnable = Runnable {
             onSingleClick(e)
@@ -560,7 +494,7 @@ abstract class GesturesListener : GestureDetector.SimpleOnGestureListener() {
         }
     }
 
-    private fun processDoubleClickEvent(e: MotionEvent?) {
+    private fun processDoubleClickEvent(e: MotionEvent) {
         timer?.apply {
             cancel()
             purge()
@@ -568,7 +502,7 @@ abstract class GesturesListener : GestureDetector.SimpleOnGestureListener() {
         onDoubleClick(e)
     }
 
-    private fun processLongClickEvent(e: MotionEvent?) {
+    private fun processLongClickEvent(e: MotionEvent) {
         timer?.apply {
             cancel()
             purge()
@@ -576,11 +510,11 @@ abstract class GesturesListener : GestureDetector.SimpleOnGestureListener() {
         onLongClick(e)
     }
 
-    open fun onSingleClick(event: MotionEvent?) {}
-    open fun onDoubleClick(event: MotionEvent?) {}
+    open fun onSingleClick(event: MotionEvent) {}
+    open fun onDoubleClick(event: MotionEvent) {}
     open fun onScrollYClick(y: Float) {}
     open fun onScrollXClick(y: Float) {}
-    open fun onLongClick(event: MotionEvent?) {}
+    open fun onLongClick(event: MotionEvent) {}
 }
 
 fun View.circularReveal(ex: Int, ey: Int, subX: Boolean, time: Long) {
@@ -596,58 +530,23 @@ fun View.circularReveal(ex: Int, ey: Int, subX: Boolean, time: Long) {
 fun openLinkInBrowser(link: String?) {
     tryWith {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
-        currActivity()?.startActivity(intent)
+        currContext()?.startActivity(intent)
     }
 }
 
 fun download(activity: Activity, episode: Episode, animeTitle: String) {
-    val manager = activity.getSystemService(AppCompatActivity.DOWNLOAD_SERVICE) as DownloadManager
-    val extractor = episode.extractors?.find { it.server.name == episode.selectedExtractor } ?: return
-    val video =
-        if (extractor.videos.size > episode.selectedVideo) extractor.videos[episode.selectedVideo] else return
-    val regex = "[\\\\/:*?\"<>|]".toRegex()
-    val aTitle = animeTitle.replace(regex, "")
-    val request: DownloadManager.Request = DownloadManager.Request(Uri.parse(video.url.url))
-
-    video.url.headers.forEach {
-        request.addRequestHeader(it.key, it.value)
-    }
-
-    val title = "Episode ${episode.number}${if (episode.title != null) " - ${episode.title}" else ""}".replace(regex, "")
-    val name = "$title${if (video.size != null) "(${video.size}p)" else ""}.mp4"
-    CoroutineScope(Dispatchers.IO).launch {
-        try {
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-
-            val arrayOfFiles = getExternalFilesDirs(activity, null)
-            if (loadData<Boolean>("sd_dl") == true && arrayOfFiles.size > 1 && arrayOfFiles[0] != null && arrayOfFiles[1] != null) {
-                val parentDirectory = arrayOfFiles[1].toString() + "/Anime/${aTitle}/"
-                val direct = File(parentDirectory)
-                if (!direct.exists()) direct.mkdirs()
-                request.setDestinationUri(Uri.fromFile(File("$parentDirectory$name")))
-            } else {
-                val direct = File(Environment.DIRECTORY_DOWNLOADS + "/Saikou/Anime/${aTitle}/")
-                if (!direct.exists()) direct.mkdirs()
-                request.setDestinationInExternalPublicDir(
-                    Environment.DIRECTORY_DOWNLOADS,
-                    "/Saikou/Anime/${aTitle}/$name"
-                )
-            }
-            request.setTitle("$title:$aTitle")
-            manager.enqueue(request)
-            toast("Started Downloading\n$title : $aTitle")
-        } catch (e: SecurityException) {
-            toast("Please give permission to access Files & Folders from Settings, & Try again.")
-        } catch (e: Exception) {
-            toast(e.toString())
-        }
+    toast("Downloading...")
+    when (loadData<Int>("settings_download_manager", activity, false) ?: 0) {
+        1    -> oneDM(activity, episode, animeTitle)
+        2    -> adm(activity, episode, animeTitle)
+        else -> defaultDownload(activity, episode, animeTitle)
     }
 }
 
 fun saveImageToDownloads(title: String, bitmap: Bitmap, context: Context) {
     FileProvider.getUriForFile(
         context,
-        BuildConfig.APPLICATION_ID + ".provider",
+        "$APPLICATION_ID.provider",
         saveImage(
             bitmap,
             Environment.getExternalStorageDirectory().absolutePath + "/" + Environment.DIRECTORY_DOWNLOADS,
@@ -660,7 +559,7 @@ fun shareImage(title: String, bitmap: Bitmap, context: Context) {
 
     val contentUri = FileProvider.getUriForFile(
         context,
-        BuildConfig.APPLICATION_ID + ".provider",
+        "$APPLICATION_ID.provider",
         saveImage(bitmap, context.cacheDir.absolutePath, title) ?: return
     )
 
@@ -677,7 +576,7 @@ fun saveImage(image: Bitmap, path: String, imageFileName: String): File? {
         val fOut: OutputStream = FileOutputStream(imageFile)
         image.compress(Bitmap.CompressFormat.PNG, 0, fOut)
         fOut.close()
-        scanFile(imageFile.absolutePath, currActivity()!!)
+        scanFile(imageFile.absolutePath, currContext()!!)
         toast("Saved to:\n$path")
         imageFile
     }
@@ -698,6 +597,12 @@ fun updateAnilistProgress(media: Media, number: String) {
                     media.id,
                     a,
                     status = if (media.userStatus == "REPEATING") media.userStatus else "CURRENT"
+                )
+                MAL.query.editList(
+                    media.idMAL,
+                    media.anime != null,
+                    a, null,
+                    if (media.userStatus == "REPEATING") media.userStatus!! else "CURRENT"
                 )
                 toast("Setting progress to $a")
             }
@@ -733,11 +638,11 @@ class NoGestureSubsamplingImageView(context: Context?, attr: AttributeSet?) :
 }
 
 fun copyToClipboard(string: String, toast: Boolean = true) {
-    val activity = currActivity() ?: return
+    val activity = currContext() ?: return
     val clipboard = getSystemService(activity, ClipboardManager::class.java)
     val clip = ClipData.newPlainText("label", string)
     clipboard?.setPrimaryClip(clip)
-    if (toast) toastString("Copied \"$string\"")
+    if (toast) snackString("Copied \"$string\"")
 }
 
 @SuppressLint("SetTextI18n")
@@ -755,7 +660,7 @@ fun countDown(media: Media, view: ViewGroup) {
 
             override fun onFinish() {
                 v.mediaCountdownContainer.visibility = View.GONE
-                toastString("Congrats Vro")
+                snackString("Congrats Vro")
             }
         }.start()
     }
@@ -828,18 +733,16 @@ class EmptyAdapter(private val count: Int) : RecyclerView.Adapter<RecyclerView.V
     inner class EmptyViewHolder(view: View) : RecyclerView.ViewHolder(view)
 }
 
-fun toast(string: String?, activity: Activity? = null) {
+fun toast(string: String?) {
     if (string != null) {
-        (activity ?: currActivity())?.apply {
-            runOnUiThread {
-                Toast.makeText(this, string, Toast.LENGTH_SHORT).show()
-            }
-        }
         logger(string)
+        MainScope().launch {
+            Toast.makeText(currActivity()?.application ?: return@launch, string, Toast.LENGTH_SHORT).show()
+        }
     }
 }
 
-fun toastString(s: String?, activity: Activity? = null) {
+fun snackString(s: String?, activity: Activity? = null, clipboard: String? = null) {
     if (s != null) {
         (activity ?: currActivity())?.apply {
             runOnUiThread {
@@ -856,7 +759,7 @@ fun toastString(s: String?, activity: Activity? = null) {
                         snackBar.dismiss()
                     }
                     setOnLongClickListener {
-                        copyToClipboard(s, false)
+                        copyToClipboard(clipboard ?: s, false)
                         toast("Copied to Clipboard")
                         true
                     }
@@ -969,4 +872,17 @@ fun checkCountry(context: Context): Boolean {
         }
         else                              -> false
     }
+}
+
+suspend fun View.pop() {
+    currActivity()?.runOnUiThread {
+        ObjectAnimator.ofFloat(this@pop, "scaleX", 1f, 1.25f).setDuration(120).start()
+        ObjectAnimator.ofFloat(this@pop, "scaleY", 1f, 1.25f).setDuration(120).start()
+    }
+    delay(120)
+    currActivity()?.runOnUiThread {
+        ObjectAnimator.ofFloat(this@pop, "scaleX", 1.25f, 1f).setDuration(100).start()
+        ObjectAnimator.ofFloat(this@pop, "scaleY", 1.25f, 1f).setDuration(100).start()
+    }
+    delay(100)
 }

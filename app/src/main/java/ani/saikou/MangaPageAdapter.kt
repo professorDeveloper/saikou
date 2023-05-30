@@ -85,6 +85,7 @@ class MangaPageAdapter : RecyclerView.Adapter<MangaPageAdapter.MangaPageViewHold
             )
         }
 
+        binding.mangaIncludeList.visibility = if(Anilist.userid!=null) View.VISIBLE else View.GONE
         binding.mangaIncludeList.setOnCheckedChangeListener { _, isChecked ->
             onIncludeListClick.invoke(isChecked)
         }

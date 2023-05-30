@@ -88,6 +88,8 @@ data class Media(
         userScore = apiMedia.mediaListEntry?.score?.toInt() ?: 0,
         userStatus = apiMedia.mediaListEntry?.status?.toString(),
         meanScore = apiMedia.meanScore,
+        startDate = apiMedia.startDate,
+        endDate = apiMedia.endDate,
         anime = if (apiMedia.type == MediaType.ANIME) Anime(
             totalEpisodes = apiMedia.episodes,
             nextAiringEpisode = apiMedia.nextAiringEpisode?.episode?.minus(1)
@@ -108,6 +110,5 @@ data class Media(
     }
 
     fun mainName() = nameMAL ?: name ?: nameRomaji
-    fun alName() = name ?: nameRomaji
     fun mangaName() = if (countryOfOrigin != "JP") mainName() else nameRomaji
 }

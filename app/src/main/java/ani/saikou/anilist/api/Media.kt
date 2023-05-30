@@ -114,7 +114,7 @@ data class Media(
     @SerialName("characters") var characters: CharacterConnection?,
 
     // The staff who produced the media
-    // @SerialName("staff") var staff: StaffConnection?,
+     @SerialName("staffPreview") var staff: StaffConnection?,
 
     // The companies who produced the media
     @SerialName("studios") var studios: StudioConnection?,

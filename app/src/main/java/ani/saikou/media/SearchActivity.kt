@@ -59,7 +59,10 @@ class SearchActivity : AppCompatActivity() {
                 isAdult = if (Anilist.adult) intent.getBooleanExtra("hentai", false) else false,
                 onList = listOnly,
                 genres = intent.getStringExtra("genre")?.let { mutableListOf(it) },
+                tags = intent.getStringExtra("tag")?.let { mutableListOf(it) },
                 sort = intent.getStringExtra("sortBy"),
+                season = intent.getStringExtra("season"),
+                seasonYear = intent.getStringExtra("seasonYear")?.toIntOrNull(),
                 results = mutableListOf(),
                 hasNextPage = false
             )
@@ -137,10 +140,10 @@ class SearchActivity : AppCompatActivity() {
                 if (!notSet) {
                     if (!model.searched) {
                         model.searched = true
-                        headerAdaptor.search.run()
+                        headerAdaptor.search?.run()
                     }
                 } else
-                    headerAdaptor.requestFocus.run()
+                    headerAdaptor.requestFocus?.run()
 
                 if(intent.getBooleanExtra("search",false)) search()
             }
@@ -153,6 +156,7 @@ class SearchActivity : AppCompatActivity() {
         val size = model.searchResults.results.size
         model.searchResults.results.clear()
         mediaAdaptor.notifyItemRangeRemoved(0, size)
+
         progressAdapter.bar?.visibility = View.VISIBLE
 
         searchTimer.cancel()

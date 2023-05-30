@@ -27,7 +27,7 @@ class UserInterfaceSettingsActivity : AppCompatActivity() {
         val settings = loadData<UserInterfaceSettings>(ui, toast = false) ?: UserInterfaceSettings().apply { saveData(ui, this) }
 
         binding.uiSettingsBack.setOnClickListener {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         val views = resources.getStringArray(R.array.home_layouts)

@@ -1,6 +1,5 @@
 package ani.saikou.parsers.manga
 
-import androidx.core.text.isDigitsOnly
 import ani.saikou.FileUrl
 import ani.saikou.client
 import ani.saikou.media.Media
@@ -57,7 +56,7 @@ class Manhwa18 : MangaParser() {
             }
             if (response == null){
                 for (it in mediaObj.synonyms){
-                    setUserText("Searching : ${it}")
+                    setUserText("Searching : $it")
                     response = search(it).let { if (it.isNotEmpty()) it[0] else null }
                     if (response !=null)break
                 }

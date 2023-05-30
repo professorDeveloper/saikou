@@ -48,13 +48,21 @@
                 tools:ignore="ContentDescription,ImageContrastCheck"
                 tools:src="@tools:sample/backgrounds/scenic[0]" />
 
+            <ImageView
+                android:id="@+id/bottomImageNo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:contentDescription="@string/no_internet"
+                android:visibility="gone"
+                app:srcCompat="@drawable/ic_round_heart_broken_24" />
+
             <ProgressBar
                 android:id="@+id/bottomImageProgress"
                 style="?android:attr/progressBarStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:visibility="visible" />
+                android:layout_gravity="center" />
 
         </FrameLayout>
 

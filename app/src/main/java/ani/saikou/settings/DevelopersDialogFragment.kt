@@ -29,6 +29,8 @@ class DevelopersDialogFragment : BottomSheetDialogFragment() {
         Developer("riimuru","https://avatars.githubusercontent.com/u/57333995?s=120&v=4","Contributor","https://github.com/riimuru"),
         Developer("vu nguyen","https://avatars.githubusercontent.com/u/68330291?s=120&v=4","Contributor","https://github.com/hoangvu12"),
         Developer("animejeff","https://avatars.githubusercontent.com/u/101831300?s=120&v=4","rotubirtnoC","https://github.com/AnimeJeff"),
+        Developer("antonydp","https://avatars.githubusercontent.com/u/38143733?s=120&v=4","Contributor","https://github.com/antonydp"),
+        Developer("tobybridle","https://avatars.githubusercontent.com/u/52335751?s=120&v=4","Contributor","https://github.com/TobyBridle"),
     )
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

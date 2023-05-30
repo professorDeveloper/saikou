@@ -187,7 +187,6 @@ class MangaFragment : Fragment() {
 
         model.getPopular().observe(viewLifecycleOwner) {
             if (it != null) {
-                println("old : $oldIncludeList & it ${it.onList ?: true}")
                 if (oldIncludeList == (it.onList != false)) {
                     val prev = model.searchResults.results.size
                     model.searchResults.results.addAll(it.results)
@@ -203,7 +202,7 @@ class MangaFragment : Fragment() {
                 if (it.hasNextPage)
                     progressAdaptor.bar?.visibility = View.VISIBLE
                 else {
-                    toastString("DAMN! YOU TRULY ARE JOBLESS\nYOU REACHED THE END")
+                    snackString("DAMN! YOU TRULY ARE JOBLESS\nYOU REACHED THE END")
                     progressAdaptor.bar?.visibility = View.GONE
                 }
                 loading = false

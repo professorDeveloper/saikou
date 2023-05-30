@@ -12,7 +12,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.GesturesListener
 import ani.saikou.databinding.ItemProgressbarBinding
-import ani.saikou.toastString
+import ani.saikou.snackString
 
 class ProgressAdapter(private val horizontal: Boolean = true, searched: Boolean) :
     RecyclerView.Adapter<ProgressAdapter.ProgressViewHolder>() {
@@ -29,14 +29,14 @@ class ProgressAdapter(private val horizontal: Boolean = true, searched: Boolean)
         val progressBar = holder.binding.root
         bar = progressBar
         val doubleClickDetector = GestureDetector(progressBar.context, object : GesturesListener() {
-            override fun onDoubleClick(event: MotionEvent?) {
-                toastString("Can't Wait, huh? fine X(")
+            override fun onDoubleClick(event: MotionEvent) {
+                snackString("Can't Wait, huh? fine X(")
                 ObjectAnimator.ofFloat(progressBar, "translationX", progressBar.translationX, progressBar.translationX + 100f)
                     .setDuration(300).start()
             }
 
             override fun onScrollYClick(y: Float) {}
-            override fun onSingleClick(event: MotionEvent?) {}
+            override fun onSingleClick(event: MotionEvent) {}
         })
         progressBar.setOnTouchListener { v, event ->
             doubleClickDetector.onTouchEvent(event)

@@ -56,9 +56,9 @@ abstract class VideoExtractor : Serializable {
 data class VideoServer(
     val name: String,
     val embed: FileUrl,
-    val extraData : Any?=null,
+    val extraData : Map<String,String>?=null,
 ) : Serializable {
-    constructor(name: String, embedUrl: String,extraData: Any?=null)
+    constructor(name: String, embedUrl: String,extraData: Map<String,String>?=null)
             : this(name, FileUrl(embedUrl),extraData)
 }
 
@@ -94,9 +94,9 @@ data class Video(
     /**
      * The direct url to the Video
      *
-     * Supports mp4,mkv, dash & m3u8, afaik
+     * Supports mp4, mkv, dash & m3u8, afaik
      * **/
-    val url: FileUrl,
+    val file: FileUrl,
 
     /**
      * use getSize(url) to get this size,
@@ -138,7 +138,7 @@ data class Subtitle(
     /**
      * The direct url to the Subtitle
      * **/
-    val url: FileUrl,
+    val file: FileUrl,
 
     /**
      * format of the Subtitle

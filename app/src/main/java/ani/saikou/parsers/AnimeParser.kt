@@ -17,11 +17,23 @@ abstract class AnimeParser : BaseParser() {
     abstract suspend fun loadEpisodes(animeLink: String, extra: Map<String, String>?): List<Episode>
 
     /**
+     * Takes ShowResponse.link, ShowResponse.extra & the Last Largest Episode Number known by app as arguments
+     *
+     * Returns the latest episode (If overriding, Make sure the episode is actually the latest episode)
+     * Returns null, if no latest episode is found.
+     * **/
+    open suspend fun getLatestEpisode(animeLink: String, extra: Map<String, String>?, latest: Float): Episode?{
+        return loadEpisodes(animeLink, extra)
+            .maxByOrNull { it.number.toFloatOrNull()?:0f }
+            ?.takeIf { latest < (it.number.toFloatOrNull() ?: 0.001f) }
+    }
+
+    /**
      * Takes Episode.link as a parameter
      *
      * This returns a Map of "Video Server's Name" & "Link/Data" of all the Video Servers present on the site, which can be further used by loadVideoServers() & loadSingleVideoServer()
      * **/
-    abstract suspend fun loadVideoServers(episodeLink: String, extra: Any?): List<VideoServer>
+    abstract suspend fun loadVideoServers(episodeLink: String, extra: Map<String,String>?): List<VideoServer>
 
 
     /**
@@ -63,11 +75,11 @@ abstract class AnimeParser : BaseParser() {
      *
      * Doesn't need to be overridden, if the parser is following the norm.
      * **/
-    open suspend fun loadByVideoServers(episodeUrl: String, extra: Any?, callback: (VideoExtractor) -> Unit) {
-        tryWithSuspend {
+    open suspend fun loadByVideoServers(episodeUrl: String, extra: Map<String,String>?, callback: (VideoExtractor) -> Unit) {
+        tryWithSuspend(true) {
             loadVideoServers(episodeUrl, extra).asyncMap {
                 getVideoExtractor(it)?.apply {
-                    tryWithSuspend {
+                    tryWithSuspend(true) {
                         load()
                     }
                     callback.invoke(this)
@@ -81,8 +93,8 @@ abstract class AnimeParser : BaseParser() {
      *
      * Doesn't need to be overridden, if the parser is following the norm.
      * **/
-    open suspend fun loadSingleVideoServer(serverName: String, episodeUrl: String, extra: Any?): VideoExtractor? {
-        return tryWithSuspend {
+    open suspend fun loadSingleVideoServer(serverName: String, episodeUrl: String, extra: Map<String,String>?, post: Boolean): VideoExtractor? {
+        return tryWithSuspend(post) {
             loadVideoServers(episodeUrl, extra).apply {
                 find { it.name == serverName }?.also {
                     return@tryWithSuspend getVideoExtractor(it)?.apply {
@@ -163,7 +175,7 @@ data class Episode(
     /**
      * In case, you want to pass extra data
      * **/
-    val extra: Any? = null,
+    val extra: Map<String,String>? = null,
 ) {
     constructor(
         number: String,
@@ -172,6 +184,6 @@ data class Episode(
         thumbnail: String,
         description: String? = null,
         isFiller: Boolean = false,
-        extra: Any? = null
+        extra: Map<String,String>? = null
     ) : this(number, link, title, FileUrl(thumbnail), description, isFiller, extra)
 }

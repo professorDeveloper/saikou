@@ -31,7 +31,7 @@ class SettingsDialogFragment : BottomSheetDialogFragment() {
             binding.settingsLogin.setOnClickListener {
                 Anilist.removeSavedToken(it.context)
                 dismiss()
-                startMainActivity(requireActivity())
+                startMainActivity(requireActivity(),)
             }
             binding.settingsUsername.text = Anilist.username
             binding.settingsUserAvatar.loadImage(Anilist.avatar)

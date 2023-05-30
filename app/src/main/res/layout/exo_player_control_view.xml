@@ -157,6 +157,7 @@
                         android:visibility="gone"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
+                        app:tint="#fff"
                         tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
                     <View
@@ -400,6 +401,7 @@
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:backgroundTint="#00FFFFFF"
+                        app:tint="@color/bg_white"
                         app:srcCompat="@drawable/ic_round_lock_open_24"
                         tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
@@ -521,7 +523,7 @@
 
             </LinearLayout>
 
-            <ani.saikou.ExtendedTimeBar
+            <view class="ani.saikou.anime.ExoplayerView$ExtendedTimeBar"
                 android:id="@id/exo_progress"
                 android:layout_width="match_parent"
                 android:layout_height="24dp"

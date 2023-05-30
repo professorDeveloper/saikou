@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="ani.saikou">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29"
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <queries>
+        <package android:name="idm.internet.download.manager.plus" />
+        <package android:name="idm.internet.download.manager" />
+        <package android:name="idm.internet.download.manager.adm.lite" />
+        <package android:name="com.dv.adm" />
+    </queries>
 
     <application
         android:name=".App"
@@ -25,46 +33,34 @@
         android:usesCleartextTraffic="true"
         tools:ignore="AllowBackup"
         tools:targetApi="m">
-        <activity
-            android:name=".settings.ReaderSettingsActivity"
-            android:exported="true" />
-        <activity
-            android:name=".settings.UserInterfaceSettingsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".settings.PlayerSettingsActivity"
-            android:exported="true" />
+        <activity android:name=".settings.FAQActivity" />
+        <activity android:name=".settings.ReaderSettingsActivity" />
+        <activity android:name=".settings.UserInterfaceSettingsActivity" />
+        <activity android:name=".settings.PlayerSettingsActivity" />
         <activity
             android:name=".settings.SettingsActivity"
-            android:exported="true" />
+            android:parentActivityName=".MainActivity" />
         <activity
             android:name=".media.SearchActivity"
-            android:exported="true" />
-        <activity
-            android:name=".media.StudioActivity"
-            android:exported="true" />
+            android:parentActivityName=".MainActivity" />
+        <activity android:name=".media.StudioActivity" />
         <activity
             android:name=".media.CalendarActivity"
-            android:exported="true" />
-        <activity
-            android:name=".user.ListActivity"
-            android:exported="true" />
+            android:parentActivityName=".MainActivity" />
+        <activity android:name=".user.ListActivity" />
         <activity
             android:name=".manga.mangareader.MangaReaderActivity"
-            android:exported="true" />
-        <activity
-            android:name=".GenreActivity"
-            android:exported="true" />
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/manga"
+            android:launchMode="singleTask" />
+        <activity android:name=".GenreActivity" />
         <activity
             android:name=".media.MediaDetailsActivity"
-            android:exported="true"
+            android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.Saikou.NeverCutout" />
-        <activity
-            android:name=".media.CharacterDetailsActivity"
-            android:exported="true" />
-        <activity
-            android:name=".NoInternet"
-            android:exported="true" />
+        <activity android:name=".media.CharacterDetailsActivity" />
+        <activity android:name=".NoInternet" />
         <activity
             android:name=".anime.ExoplayerView"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation"
@@ -77,6 +73,7 @@
         <activity
             android:name=".anilist.Login"
             android:configChanges="orientation|screenSize|layoutDirection"
+            android:excludeFromRecents="true"
             android:exported="true"
             android:launchMode="singleTask">
             <intent-filter android:label="Anilist Login for Saikou">
@@ -91,8 +88,26 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".mal.Login"
+            android:configChanges="orientation|screenSize|layoutDirection"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <intent-filter android:label="Myanimelist Login for Saikou">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="mal"
+                    android:scheme="saikou" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".anilist.UrlMedia"
             android:configChanges="orientation|screenSize|layoutDirection"
+            android:excludeFromRecents="true"
             android:exported="true"
             android:launchMode="singleTask">
             <intent-filter android:label="Read on Saikou">
@@ -131,6 +146,15 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name=".subcriptions.AlarmReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="Aani.saikou.ACTION_ALARM"/>
+            </intent-filter>
+        </receiver>
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
@@ -145,6 +169,14 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
+        <service android:name=".download.video.MyDownloadService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="androidx.media3.exoplayer.downloadService.action.RESTART"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

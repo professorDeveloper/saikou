@@ -3,14 +3,19 @@ package ani.saikou.others
 import ani.saikou.client
 import ani.saikou.tryWithSuspend
 import kotlinx.serialization.Serializable
+import java.net.URLEncoder
 
 object AniSkip {
 
-    suspend fun getResult(malId: Int, episodeNumber: Int, episodeLength: Long): List<Stamp>? {
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun getResult(malId: Int, episodeNumber: Int, episodeLength: Long, useProxyForTimeStamps: Boolean): List<Stamp>? {
         val url =
             "https://api.aniskip.com/v2/skip-times/$malId/$episodeNumber?types[]=ed&types[]=mixed-ed&types[]=mixed-op&types[]=op&types[]=recap&episodeLength=$episodeLength"
         return tryWithSuspend {
-            val a = client.get(url)
+            val a = if(useProxyForTimeStamps)
+                client.get("https://corsproxy.io/?${URLEncoder.encode(url, "utf-8").replace("+", "%20")}")
+            else
+                client.get(url)
             val res = a.parsed<AniSkipResponse>()
             if (res.found) res.results else null
         }

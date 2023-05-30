@@ -12,27 +12,24 @@ import ani.saikou.R
 class Xpandable @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : LinearLayout(context, attrs) {
-    var expanded: Boolean? = true
+    var expanded: Boolean = false
 
     init {
         context.withStyledAttributes(attrs, R.styleable.Xpandable) {
-            expanded = getBoolean(R.styleable.Xpandable_isExpanded, false)
+            expanded = getBoolean(R.styleable.Xpandable_isExpanded, expanded)
         }
     }
 
     override fun onAttachedToWindow() {
 
         getChildAt(0)!!.setOnClickListener {
-            expanded ?: return@setOnClickListener
-            val curr = expanded!!
-            expanded = null
-            if (curr) hideAll() else showAll()
+            if (expanded) hideAll() else showAll()
             postDelayed({
-                expanded = !curr
+                expanded = !expanded
             }, 300)
         }
 
-        if(!expanded!!) children.forEach {
+        if(!expanded) children.forEach {
             if (it != getChildAt(0)){
                 it.visibility = GONE
             }

@@ -1,35 +1,46 @@
 package ani.saikou.parsers.anime.extractors
 
+import ani.saikou.FileUrl
 import ani.saikou.client
+import ani.saikou.defaultHeaders
 import ani.saikou.findBetween
 import ani.saikou.parsers.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.math.floor
+import kotlin.random.Random
 
 class StreamSB(override val server: VideoServer) : VideoExtractor() {
     override suspend fun extract(): VideoContainer {
         val videos = mutableListOf<Video>()
         val id = server.embed.url.let { it.findBetween("/e/", ".html") ?: it.split("/e/")[1] }
         val jsonLink =
-            "https://streamsss.net/sources48/${bytesToHex("||$id||||streamsb".toByteArray())}/"
+            "https://sbani.pro/375664356a494546326c4b797c7c6e756577776778623171737/${encode(id)}"
         val json = client.get(jsonLink, mapOf("watchsb" to "sbstream")).parsed<Response>()
         if (json.statusCode == 200) {
-            videos.add(Video(null, VideoType.M3U8, json.streamData!!.file))
+            videos.add(Video(null, VideoType.M3U8, FileUrl(json.streamData!!.file, defaultHeaders)))
         }
         return VideoContainer(videos)
     }
 
-    private val hexArray = "0123456789ABCDEF".toCharArray()
+    private val alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
-    private fun bytesToHex(bytes: ByteArray): String {
-        val hexChars = CharArray(bytes.size * 2)
-        for (j in bytes.indices) {
-            val v = bytes[j].toInt() and 0xFF
-
-            hexChars[j * 2] = hexArray[v ushr 4]
-            hexChars[j * 2 + 1] = hexArray[v and 0x0F]
+    private fun encode(id: String): String {
+        val code = "${makeId()}||${id}||${makeId()}||streamsb"
+        val sb = StringBuilder()
+        val arr = code.toCharArray()
+        for (j in arr.indices) {
+            sb.append(arr[j].code.toString().toInt(10).toString(16))
         }
-        return String(hexChars)
+        return sb.toString()
+    }
+
+    private fun makeId(): String {
+        val sb = StringBuilder()
+        for (j in 0..12) {
+            sb.append(alphabet[(floor(Random.nextDouble() * alphabet.length)).toInt()])
+        }
+        return sb.toString()
     }
 
     @Serializable

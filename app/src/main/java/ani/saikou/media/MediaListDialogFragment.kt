@@ -15,6 +15,7 @@ import ani.saikou.*
 import ani.saikou.anilist.Anilist
 import ani.saikou.anilist.api.FuzzyDate
 import ani.saikou.databinding.BottomSheetMediaListBinding
+import ani.saikou.mal.MAL
 import com.google.android.material.switchmaterial.SwitchMaterial
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -92,28 +93,24 @@ class MediaListDialogFragment : BottomSheetDialogFragment() {
                 val end = DatePickerFragment(requireActivity(), media!!.userCompletedAt)
                 binding.mediaListStart.setText((if (media!!.userStartedAt.year != null) media!!.userStartedAt else "").toString())
                 binding.mediaListStart.setOnClickListener {
-                    try {
+                    tryWith(false) {
                         if (!start.dialog.isShowing) start.dialog.show()
-                    } catch (e: Exception) {
                     }
                 }
                 binding.mediaListStart.setOnFocusChangeListener { _, b ->
-                    try {
+                    tryWith(false) {
                         if (b && !start.dialog.isShowing) start.dialog.show()
-                    } catch (e: Exception) {
                     }
                 }
                 binding.mediaListEnd.setText((if (media!!.userCompletedAt.year != null) media!!.userCompletedAt else "").toString())
                 binding.mediaListEnd.setOnClickListener {
-                    try {
+                    tryWith(false) {
                         if (!end.dialog.isShowing) end.dialog.show()
-                    } catch (e: Exception) {
                     }
                 }
                 binding.mediaListEnd.setOnFocusChangeListener { _, b ->
-                    try {
+                    tryWith(false) {
                         if (b && !end.dialog.isShowing) end.dialog.show()
-                    } catch (e: Exception) {
                     }
                 }
                 start.dialog.setOnDismissListener { _binding?.mediaListStart?.setText(start.date.toString()) }
@@ -176,7 +173,7 @@ class MediaListDialogFragment : BottomSheetDialogFragment() {
                     binding.mediaListRewatch.setText(this.toString())
                 }
 
-                if(media?.inCustomListsOf?.isEmpty() != false)
+                if (media?.inCustomListsOf?.isEmpty() != false)
                     binding.mediaListAddCustomList.apply {
                         (parent as? ViewGroup)?.removeView(this)
                     }
@@ -196,23 +193,39 @@ class MediaListDialogFragment : BottomSheetDialogFragment() {
                 binding.mediaListSave.setOnClickListener {
                     scope.launch {
                         withContext(Dispatchers.IO) {
-                            if (media != null)
+                            if (media != null) {
+                                val progress = _binding?.mediaListProgress?.text.toString().toIntOrNull()
+                                val score =
+                                    (_binding?.mediaListScore?.text.toString().toDoubleOrNull()?.times(10))?.toInt()
+                                val status = _binding?.mediaListStatus?.text.toString()
+                                val rewatch = _binding?.mediaListRewatch?.text?.toString()?.toIntOrNull()
+                                val startD = if (start.date.year != null) start.date else null
+                                val endD = if (end.date.year != null) end.date else null
                                 Anilist.mutation.editList(
                                     media!!.id,
-                                    if (_binding?.mediaListProgress?.text.toString() != "") _binding?.mediaListProgress?.text.toString()
-                                        .toInt() else null,
-                                    if (_binding?.mediaListScore?.text.toString() != "") (_binding?.mediaListScore?.text.toString()
-                                        .toDouble() * 10).toInt() else null,
-                                    _binding?.mediaListRewatch?.text?.toString()?.toIntOrNull(),
-                                    if (_binding?.mediaListStatus?.text.toString() != "") _binding?.mediaListStatus?.text.toString() else null,
+                                    progress,
+                                    score,
+                                    rewatch,
+                                    status,
                                     media?.isListPrivate ?: false,
-                                    if (start.date.year != null) start.date else null,
-                                    if (end.date.year != null) end.date else null,
+                                    startD,
+                                    endD,
                                     media?.inCustomListsOf?.mapNotNull { if (it.value) it.key else null }
                                 )
+                                MAL.query.editList(
+                                    media!!.idMAL,
+                                    media!!.anime != null,
+                                    progress,
+                                    score,
+                                    status,
+                                    rewatch,
+                                    startD,
+                                    endD
+                                )
+                            }
                         }
                         Refresh.all()
-                        toastString("List Updated")
+                        snackString("List Updated")
                         dismissAllowingStateLoss()
                     }
                 }
@@ -221,13 +234,16 @@ class MediaListDialogFragment : BottomSheetDialogFragment() {
                     val id = media!!.userListId
                     if (id != null) {
                         scope.launch {
-                            withContext(Dispatchers.IO) { Anilist.mutation.deleteList(id) }
+                            withContext(Dispatchers.IO) {
+                                Anilist.mutation.deleteList(id)
+                                MAL.query.deleteList(media?.anime!=null,media?.idMAL)
+                            }
                             Refresh.all()
-                            toastString("Deleted from List")
+                            snackString("Deleted from List")
                             dismissAllowingStateLoss()
                         }
                     } else {
-                        toastString("No List ID found, reloading...")
+                        snackString("No List ID found, reloading...")
                         Refresh.all()
                     }
                 }

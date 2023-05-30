@@ -19,9 +19,9 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:adjustViewBounds="true"
             android:focusable="false"
-            android:scaleType="fitCenter"
+            app:zoomEnabled="false"
+            app:panEnabled="false"
             tools:ignore="ContentDescription,ImageContrastCheck"
             tools:src="@tools:sample/backgrounds/scenic[0]" />
 

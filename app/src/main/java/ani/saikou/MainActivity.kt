@@ -3,13 +3,17 @@ package ani.saikou
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.graphics.drawable.Animatable
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnticipateInterpolator
+import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.animation.doOnEnd
@@ -25,13 +29,18 @@ import ani.saikou.anilist.AnilistHomeViewModel
 import ani.saikou.databinding.ActivityMainBinding
 import ani.saikou.databinding.SplashScreenBinding
 import ani.saikou.media.MediaDetailsActivity
+import ani.saikou.others.CustomBottomDialog
 import ani.saikou.settings.UserInterfaceSettings
+import ani.saikou.subcriptions.Subscription.Companion.startSubscription
+import io.noties.markwon.Markwon
+import io.noties.markwon.SoftBreakAddsNewLinePlugin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nl.joery.animatedbottombar.AnimatedBottomBar
 import java.io.Serializable
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -45,6 +54,16 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        var doubleBackToExitPressedOnce = false
+        onBackPressedDispatcher.addCallback(this) {
+            if (doubleBackToExitPressedOnce) {
+                finish()
+            }
+            doubleBackToExitPressedOnce = true
+            snackString("Please perform BACK again to Exit")
+            Handler(Looper.getMainLooper()).postDelayed({ doubleBackToExitPressedOnce = false }, 2000)
+        }
 
         binding.root.isMotionEventSplittingEnabled = false
 
@@ -96,7 +115,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (!isOnline(this)) {
-            toastString("No Internet Connection")
+            snackString("No Internet Connection")
             startActivity(Intent(this, NoInternet::class.java))
         } else {
             val model: AnilistHomeViewModel by viewModels()
@@ -126,30 +145,8 @@ class MainActivity : AppCompatActivity() {
                         })
                         navbar.selectTabAt(selectedOption)
                         mainViewPager.post { mainViewPager.setCurrentItem(selectedOption, false) }
-
-                        if (loadMedia != null) {
-                            scope.launch {
-                                val media = withContext(Dispatchers.IO) {
-                                    Anilist.query.getMedia(
-                                        loadMedia!!,
-                                        loadIsMAL
-                                    )
-                                }
-                                if (media != null) {
-                                    startActivity(
-                                        Intent(
-                                            this@MainActivity,
-                                            MediaDetailsActivity::class.java
-                                        ).putExtra("media", media as Serializable)
-                                    )
-                                } else {
-                                    toastString("Seems like that wasn't found on Anilist.")
-                                }
-                            }
-                        }
                     } else {
                         binding.mainProgressBar.visibility = View.GONE
-                        //                        toastString("Error Loading Tags & Genres.")
                     }
                 }
             }
@@ -157,22 +154,58 @@ class MainActivity : AppCompatActivity() {
             if (!load) {
                 scope.launch(Dispatchers.IO) {
                     model.loadMain(this@MainActivity)
+                    val id = intent.extras?.getInt("mediaId", 0)
+                    val isMAL = intent.extras?.getBoolean("mal") ?: false
+                    val cont = intent.extras?.getBoolean("continue") ?: false
+                    if (id != null && id != 0) {
+                        val media = withContext(Dispatchers.IO) {
+                            Anilist.query.getMedia(id, isMAL)
+                        }
+                        if (media != null) {
+                            media.cameFromContinue = cont
+                            startActivity(
+                                Intent(this@MainActivity, MediaDetailsActivity::class.java)
+                                    .putExtra("media", media as Serializable)
+                            )
+                        } else {
+                            snackString("Seems like that wasn't found on Anilist.")
+                        }
+                    }
+                    delay(500)
+                    startSubscription()
                 }
                 load = true
             }
-        }
-    }
 
-    //Double Tap Back
-    private var doubleBackToExitPressedOnce = false
-    override fun onBackPressed() {
-        if (doubleBackToExitPressedOnce) {
-            super.onBackPressed()
-            return
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (loadData<Boolean>("allow_opening_links", this) != true) {
+                    CustomBottomDialog.newInstance().apply {
+                        title = "Allow Saikou to automatically open Anilist & MAL Links?"
+                        val md = "Open settings & click +Add Links & select Anilist & Mal urls"
+                        addView(TextView(this@MainActivity).apply {
+                            val markWon =
+                                Markwon.builder(this@MainActivity).usePlugin(SoftBreakAddsNewLinePlugin.create()).build()
+                            markWon.setMarkdown(this, md)
+                        })
+
+                        setNegativeButton("No") {
+                            saveData("allow_opening_links", true, this@MainActivity)
+                            dismiss()
+                        }
+
+                        setPositiveButton("Yes") {
+                            saveData("allow_opening_links", true, this@MainActivity)
+                            tryWith(true) {
+                                startActivity(
+                                    Intent(Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS)
+                                        .setData(Uri.parse("package:$packageName"))
+                                )
+                            }
+                        }
+                    }.show(supportFragmentManager, "dialog")
+                }
+            }
         }
-        this.doubleBackToExitPressedOnce = true
-        toastString("Please perform BACK again to Exit")
-        Handler(Looper.getMainLooper()).postDelayed({ doubleBackToExitPressedOnce = false }, 2000)
     }
 
     //ViewPager

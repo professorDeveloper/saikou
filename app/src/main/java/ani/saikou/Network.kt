@@ -1,12 +1,15 @@
 package ani.saikou
 
 import android.content.Context
-import com.lagradost.nicehttp.Requests
-import com.lagradost.nicehttp.ResponseParser
-import com.lagradost.nicehttp.addGenericDns
+import android.os.Build
+import androidx.fragment.app.FragmentActivity
+import ani.saikou.others.webview.CloudFlare
+import ani.saikou.others.webview.WebViewBottomDialog
+import dev.brahmkshatriya.nicehttp.Requests
+import dev.brahmkshatriya.nicehttp.ResponseParser
+import dev.brahmkshatriya.nicehttp.addGenericDns
+import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.decodeFromString
@@ -15,13 +18,17 @@ import kotlinx.serialization.serializer
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import java.io.File
+import java.io.PrintWriter
 import java.io.Serializable
+import java.io.StringWriter
 import java.util.concurrent.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 
 val defaultHeaders = mapOf(
-    "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
+    "User-Agent" to
+            "Mozilla/5.0 (Linux; Android %s; %s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Mobile Safari/537.36"
+                .format(Build.VERSION.RELEASE, Build.MODEL)
 )
 lateinit var cache: Cache
 
@@ -29,10 +36,10 @@ lateinit var okHttpClient: OkHttpClient
 lateinit var client: Requests
 
 fun initializeNetwork(context: Context) {
-    val dns = loadData<Int>("settings_dns", context)
+    val dns = loadData<Int>("settings_dns")
     cache = Cache(
         File(context.cacheDir, "http_cache"),
-        50L * 1024L * 1024L // 50 MiB
+        5 * 1024L * 1024L // 5 MiB
     )
     okHttpClient = OkHttpClient.Builder()
         .followRedirects(true)
@@ -66,7 +73,7 @@ object Mapper : ResponseParser {
 
     @OptIn(InternalSerializationApi::class)
     override fun <T : Any> parse(text: String, kClass: KClass<T>): T {
-        return json.decodeFromString(kClass.serializer(),text)
+        return json.decodeFromString(kClass.serializer(), text)
     }
 
     override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? {
@@ -77,46 +84,47 @@ object Mapper : ResponseParser {
         }
     }
 
-    override fun writeValueAsString(obj: Any): String {
-        return json.encodeToString(serializer(),obj)
-    }
-
     inline fun <reified T> parse(text: String): T {
         return json.decodeFromString(text)
     }
 }
 
-//fun <K, V, R> Map<out K, V>.asyncMap(f: suspend (Map.Entry<K, V>) -> R): List<R> = runBlocking {
-//    map { withContext(Dispatchers.IO) { async { f(it) } } }.map { it.await() }
-//}
-
 fun <A, B> Collection<A>.asyncMap(f: suspend (A) -> B): List<B> = runBlocking {
     map { async { f(it) } }.map { it.await() }
 }
 
-//fun <A, B> Collection<A>.asyncMapNotNull(f: suspend (A) -> B?): List<B> = runBlocking {
-//    map { async { f(it) } }.mapNotNull { it.await() }
-//}
+fun <A, B> Collection<A>.asyncMapNotNull(f: suspend (A) -> B?): List<B> = runBlocking {
+    map { async { f(it) } }.mapNotNull { it.await() }
+}
 
-fun logError(e: Exception) {
-    toastString(e.localizedMessage)
+fun logError(e: Throwable, post: Boolean = true, snackbar: Boolean = true) {
+    val sw = StringWriter()
+    val pw = PrintWriter(sw)
+    e.printStackTrace(pw)
+    val stackTrace: String = sw.toString()
+    if (post) {
+        if (snackbar)
+            snackString(e.localizedMessage, null, stackTrace)
+        else
+            toast(e.localizedMessage)
+    }
     e.printStackTrace()
 }
 
-fun <T> tryWith(call: () -> T): T? {
+fun <T> tryWith(post: Boolean = false, snackbar: Boolean = true, call: () -> T): T? {
     return try {
         call.invoke()
-    } catch (e: Exception) {
-        logError(e)
+    } catch (e: Throwable) {
+        logError(e, post, snackbar)
         null
     }
 }
 
-suspend fun <T> tryWithSuspend(call: suspend () -> T): T? {
+suspend fun <T> tryWithSuspend(post: Boolean = false, snackbar: Boolean = true, call: suspend () -> T): T? {
     return try {
         call.invoke()
-    } catch (e: Exception) {
-        logError(e)
+    } catch (e: Throwable) {
+        logError(e, post, snackbar)
         null
     } catch (e: CancellationException) {
         null
@@ -151,6 +159,11 @@ fun <T> lazyList(vararg objects: Pair<String, KFunction<T>>): List<Lazier<T>> {
     }
 }
 
+fun <T> T.printIt(pre: String = ""): T {
+    println("$pre$this")
+    return this
+}
+
 
 fun OkHttpClient.Builder.addGoogleDns() = (
         addGenericDns(
@@ -181,3 +194,32 @@ fun OkHttpClient.Builder.addAdGuardDns() = (
                 "94.140.14.141",
             )
         ))
+
+@Suppress("BlockingMethodInNonBlockingContext")
+suspend fun webViewInterface(webViewDialog: WebViewBottomDialog): Map<String, String>? {
+    var map : Map<String,String>? = null
+
+    val latch = CountDownLatch(1)
+    webViewDialog.callback = {
+        map = it
+        latch.countDown()
+    }
+    val fragmentManager = (currContext() as FragmentActivity?)?.supportFragmentManager ?: return null
+    webViewDialog.show(fragmentManager, "web-view")
+    delay(0)
+    latch.await(2,TimeUnit.MINUTES)
+    return map
+}
+
+@Suppress("BlockingMethodInNonBlockingContext")
+suspend fun webViewInterface(type: String, url: FileUrl): Map<String, String>? {
+    val webViewDialog: WebViewBottomDialog = when (type) {
+        "Cloudflare" -> CloudFlare.newInstance(url)
+        else         -> return null
+    }
+    return webViewInterface(webViewDialog)
+}
+
+suspend fun webViewInterface(type: String, url: String): Map<String, String>? {
+    return webViewInterface(type,FileUrl(url))
+}

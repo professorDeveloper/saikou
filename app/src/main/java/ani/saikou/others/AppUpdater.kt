@@ -24,7 +24,8 @@ import kotlinx.serialization.Serializable
 import java.io.File
 
 object AppUpdater {
-    suspend fun check(activity: FragmentActivity) {
+    suspend fun check(activity: FragmentActivity,post:Boolean=false) {
+        if(post) snackString("Checking for Update")
         val repo = activity.getString(R.string.repo)
         tryWithSuspend {
             val md =
@@ -69,6 +70,9 @@ object AppUpdater {
                     }
                     show(activity.supportFragmentManager, "dialog")
                 }
+            }
+            else{
+                if(post) snackString("No Update Found")
             }
         }
     }

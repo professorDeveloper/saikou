@@ -1,7 +1,6 @@
 package ani.saikou.manga
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.LayoutInflater
@@ -16,13 +15,18 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.GridLayoutManager
 import ani.saikou.*
 import ani.saikou.databinding.FragmentAnimeWatchBinding
-import ani.saikou.manga.mangareader.MangaReaderActivity
+import ani.saikou.manga.mangareader.ChapterLoaderDialog
 import ani.saikou.media.Media
 import ani.saikou.media.MediaDetailsViewModel
 import ani.saikou.parsers.HMangaSources
 import ani.saikou.parsers.MangaParser
 import ani.saikou.parsers.MangaSources
 import ani.saikou.settings.UserInterfaceSettings
+import ani.saikou.subcriptions.Notifications
+import ani.saikou.subcriptions.Notifications.Group.MANGA_GROUP
+import ani.saikou.subcriptions.Subscription.Companion.getChannelId
+import ani.saikou.subcriptions.SubscriptionHelper
+import ani.saikou.subcriptions.SubscriptionHelper.Companion.saveSubscription
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
@@ -66,6 +70,7 @@ open class MangaReadFragment : Fragment() {
         binding.animeSourceRecycler.updatePadding(bottom = binding.animeSourceRecycler.paddingBottom + navBarHeight)
         screenWidth = resources.displayMetrics.widthPixels.dp
 
+
         var maxGridSize = (screenWidth / 100f).roundToInt()
         maxGridSize = max(4, maxGridSize - (maxGridSize % 2))
 
@@ -88,8 +93,8 @@ open class MangaReadFragment : Fragment() {
 
         binding.animeSourceRecycler.layoutManager = gridLayoutManager
 
-        model.scrolledToTop.observe(viewLifecycleOwner){
-            if(it) binding.animeSourceRecycler.scrollToPosition(0)
+        model.scrolledToTop.observe(viewLifecycleOwner) {
+            if (it) binding.animeSourceRecycler.scrollToPosition(0)
         }
 
         continueEp = model.continueMedia ?: false
@@ -101,6 +106,9 @@ open class MangaReadFragment : Fragment() {
 
                 if (media.format == "MANGA" || media.format == "ONE SHOT") {
                     media.selected = model.loadSelected(media)
+
+                    subscribed = SubscriptionHelper.getSubscriptions(requireContext()).containsKey(media.id)
+
                     style = media.selected!!.recyclerStyle
                     reverse = media.selected!!.recyclerReversed
 
@@ -157,6 +165,8 @@ open class MangaReadFragment : Fragment() {
                             position
                         )
                     }
+
+                    headerAdapter.subscribeButton(true)
                     reload()
                 }
             }
@@ -196,18 +206,42 @@ open class MangaReadFragment : Fragment() {
         reload()
     }
 
+    var subscribed = false
+    fun onNotificationPressed(subscribed: Boolean, source: String) {
+        this.subscribed = subscribed
+        saveSubscription(requireContext(), media, subscribed)
+        if (!subscribed)
+            Notifications.deleteChannel(requireContext(), getChannelId(true, media.id))
+        else
+            Notifications.createChannel(
+                requireContext(),
+                MANGA_GROUP,
+                getChannelId(true, media.id),
+                media.userPreferredName
+            )
+        snackString(
+            if (subscribed) "Subscribed! Receiving notifications, when new chapters are released on $source."
+            else "Unsubscribed, you will not receive any notifications."
+        )
+    }
+
     fun onMangaChapterClick(i: String) {
         model.continueMedia = false
-        if (media.manga?.chapters?.get(i) != null) {
+        media.manga?.chapters?.get(i)?.let {
             media.manga?.selectedChapter = i
-            val intent = Intent(activity, MangaReaderActivity::class.java).apply { putExtra("media", media) }
-            startActivity(intent)
+            model.saveSelected(media.id, media.selected!!, requireActivity())
+            ChapterLoaderDialog.newInstance(it, true).show(requireActivity().supportFragmentManager, "dialog")
         }
     }
 
     @SuppressLint("NotifyDataSetChanged")
     private fun reload() {
         val selected = model.loadSelected(media)
+
+        //Find latest chapter for subscription
+        selected.latest = media.manga?.chapters?.values?.maxOfOrNull { it.number.toFloatOrNull() ?: 0f } ?: 0f
+        selected.latest = media.userProgress?.toFloat()?.takeIf { selected.latest < it } ?: selected.latest
+
         model.saveSelected(media.id, selected, requireActivity())
         headerAdapter.handleChapters()
         chapterAdapter.notifyItemRangeRemoved(0, chapterAdapter.arr.size)

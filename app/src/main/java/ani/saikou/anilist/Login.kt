@@ -4,8 +4,8 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import ani.saikou.logger
 import ani.saikou.logError
+import ani.saikou.logger
 import ani.saikou.startMainActivity
 
 class Login : AppCompatActivity() {

@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.GridLayoutManager
 import ani.saikou.*
 import ani.saikou.databinding.ActivityStudioBinding
+import ani.saikou.others.getSerialized
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -39,11 +40,11 @@ class StudioActivity : AppCompatActivity() {
         binding.studioRecycler.updatePadding(bottom = 64f.px + navBarHeight)
         binding.studioTitle.isSelected = true
 
-        studio = intent.getSerializableExtra("studio") as Studio?
+        studio = intent.getSerialized("studio")
         binding.studioTitle.text = studio?.name
 
         binding.studioClose.setOnClickListener {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         model.getStudio().observe(this) {

@@ -2,12 +2,14 @@ package ani.saikou
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
+import androidx.core.content.ContextCompat
 import androidx.core.view.marginBottom
 import androidx.core.view.updatePaddingRelative
 import androidx.fragment.app.Fragment
@@ -17,12 +19,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import ani.saikou.anilist.Anilist
 import ani.saikou.anilist.AnilistAnimeViewModel
 import ani.saikou.anilist.SearchResults
 import ani.saikou.anilist.getUserId
 import ani.saikou.databinding.FragmentAnimeBinding
 import ani.saikou.media.MediaAdaptor
 import ani.saikou.media.ProgressAdapter
+import ani.saikou.media.SearchActivity
 import ani.saikou.settings.UserInterfaceSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -138,7 +142,6 @@ class AnimeFragment : Fragment() {
 
         model.getPopular().observe(viewLifecycleOwner) {
             if (it != null) {
-                println("old : $oldIncludeList & it ${it.onList ?: true}")
                 if (oldIncludeList == (it.onList != false)) {
                     val prev = model.searchResults.results.size
                     model.searchResults.results.addAll(it.results)
@@ -154,7 +157,7 @@ class AnimeFragment : Fragment() {
                 if (it.hasNextPage)
                     progressAdaptor.bar?.visibility = View.VISIBLE
                 else {
-                    toastString("DAMN! YOU TRULY ARE JOBLESS\nYOU REACHED THE END")
+                    snackString("DAMN! YOU TRULY ARE JOBLESS\nYOU REACHED THE END")
                     progressAdaptor.bar?.visibility = View.GONE
                 }
                 loading = false
@@ -226,6 +229,20 @@ class AnimeFragment : Fragment() {
             scope.launch(Dispatchers.IO) {
                 model.loadTrending(i)
             }
+        }
+
+        animePageAdapter.onSeasonLongClick = { i ->
+            val (season, year) = Anilist.currentSeasons[i]
+            ContextCompat.startActivity(
+                requireContext(),
+                Intent(requireContext(), SearchActivity::class.java)
+                    .putExtra("type", "ANIME")
+                    .putExtra("season", season)
+                    .putExtra("seasonYear", year.toString())
+                    .putExtra("search", true),
+                null
+            )
+            true
         }
 
         val live = Refresh.activity.getOrPut(this.hashCode()) { MutableLiveData(false) }

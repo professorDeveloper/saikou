@@ -40,11 +40,10 @@ class MangaBuddy : MangaParser() {
 
     override suspend fun loadImages(chapterLink: String): List<MangaImage> {
         val res = client.get(chapterLink).text
-        val cdn = res.findBetween("var mainServer = \"", "\";")
         val arr = res.findBetween("var chapImages = ", "\n")?.trim('\'')?.split(",")
 
         return (arr ?: return listOf()).map {
-            val link = FileUrl("https:$cdn$it", headers)
+            val link = FileUrl(it, headers)
             MangaImage(link)
         }
     }

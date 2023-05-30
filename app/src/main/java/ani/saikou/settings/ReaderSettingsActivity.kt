@@ -24,7 +24,7 @@ class ReaderSettingsActivity : AppCompatActivity() {
         val settings = loadData<ReaderSettings>(reader, toast = false) ?: ReaderSettings().apply { saveData(reader, this) }
 
         binding.readerSettingsBack.setOnClickListener {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         //General
@@ -53,7 +53,7 @@ class ReaderSettingsActivity : AppCompatActivity() {
             binding.readerSettingsContinuous
         )
 
-        binding.readerSettingsLayoutText.text = settings.default.layout.toString()
+        binding.readerSettingsLayoutText.text = settings.default.layout.string
         var selectedLayout = layoutList[settings.default.layout.ordinal]
         selectedLayout.alpha = 1f
 
@@ -63,16 +63,16 @@ class ReaderSettingsActivity : AppCompatActivity() {
                 selectedLayout = imageButton
                 selectedLayout.alpha = 1f
                 settings.default.layout = CurrentReaderSettings.Layouts[index]?:CurrentReaderSettings.Layouts.CONTINUOUS
-                binding.readerSettingsLayoutText.text = settings.default.layout.toString()
+                binding.readerSettingsLayoutText.text = settings.default.layout.string
                 saveData(reader, settings)
             }
         }
 
-        binding.readerSettingsDirectionText.text = settings.default.direction.toString()
+        binding.readerSettingsDirectionText.text = settings.default.direction.string
         binding.readerSettingsDirection.rotation = 90f * (settings.default.direction.ordinal)
         binding.readerSettingsDirection.setOnClickListener {
             settings.default.direction = CurrentReaderSettings.Directions[settings.default.direction.ordinal + 1] ?: CurrentReaderSettings.Directions.TOP_TO_BOTTOM
-            binding.readerSettingsDirectionText.text = settings.default.direction.toString()
+            binding.readerSettingsDirectionText.text = settings.default.direction.string
             binding.readerSettingsDirection.rotation = 90f * (settings.default.direction.ordinal)
             saveData(reader, settings)
         }
@@ -100,6 +100,12 @@ class ReaderSettingsActivity : AppCompatActivity() {
         binding.readerSettingsTrueColors.isChecked = settings.default.trueColors
         binding.readerSettingsTrueColors.setOnCheckedChangeListener { _, isChecked ->
             settings.default.trueColors = isChecked
+            saveData(reader, settings)
+        }
+
+        binding.readerSettingsCropBorders.isChecked = settings.default.cropBorders
+        binding.readerSettingsCropBorders.setOnCheckedChangeListener { _, isChecked ->
+            settings.default.cropBorders = isChecked
             saveData(reader, settings)
         }
 
@@ -149,6 +155,12 @@ class ReaderSettingsActivity : AppCompatActivity() {
             settings.default.wrapImages = isChecked
             saveData(reader, settings)
         }
+
+        binding.readerSettingsLongClickImage.isChecked = settings.default.longClickImage
+        binding.readerSettingsLongClickImage.setOnCheckedChangeListener { _,isChecked ->
+            settings.default.longClickImage = isChecked
+            saveData(reader, settings)
+        }
         
         //Update Progress
         binding.readerSettingsAskUpdateProgress.isChecked = settings.askIndividual
@@ -159,7 +171,7 @@ class ReaderSettingsActivity : AppCompatActivity() {
         binding.readerSettingsAskUpdateDoujins.isChecked = settings.updateForH
         binding.readerSettingsAskUpdateDoujins.setOnCheckedChangeListener { _, isChecked ->
             settings.updateForH = isChecked
-            if (isChecked) toastString(getString(R.string.very_bold))
+            if (isChecked) snackString(getString(R.string.very_bold))
             saveData(reader, settings)
         }
 

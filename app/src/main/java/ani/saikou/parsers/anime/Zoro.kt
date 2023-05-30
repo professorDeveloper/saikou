@@ -20,7 +20,6 @@ class Zoro : AnimeParser() {
     override val saveName = "zoro_to"
     override val hostUrl = "https://zoro.to"
     override val isDubAvailableSeparately = false
-    override val allowsPreloading = false
 
     private val header = mapOf("X-Requested-With" to "XMLHttpRequest", "referer" to hostUrl)
 
@@ -39,7 +38,7 @@ class Zoro : AnimeParser() {
 
     private val embedHeaders = mapOf("referer" to "$hostUrl/")
 
-    override suspend fun loadVideoServers(episodeLink: String, extra: Any?): List<VideoServer> {
+    override suspend fun loadVideoServers(episodeLink: String, extra: Map<String,String>?): List<VideoServer> {
         val res = client.get("$hostUrl/ajax/v2/episode/servers?episodeId=$episodeLink", header).parsed<HtmlResponse>()
         val element = Jsoup.parse(res.html ?: return listOf())
 

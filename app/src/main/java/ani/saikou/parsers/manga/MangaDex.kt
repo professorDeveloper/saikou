@@ -1,6 +1,5 @@
 package ani.saikou.parsers.manga
 
-import ani.saikou.asyncMap
 import ani.saikou.client
 import ani.saikou.parsers.MangaChapter
 import ani.saikou.parsers.MangaImage
@@ -26,7 +25,7 @@ class MangaDex : MangaParser() {
             .parsed<MangaResponse>().total ?: return list
 
         setUserText("Parsing Chapters...")
-        (0..totalChapters step 200).reversed().toList().asyncMap { index ->
+        (0..totalChapters step 200).reversed().toList().map { index ->
             val data = client
                 .get("$host/manga/$mangaLink/feed?limit=200&order[volume]=desc&order[chapter]=desc&offset=$index")
                 .parsed<MangaResponse>().data?.reversed()

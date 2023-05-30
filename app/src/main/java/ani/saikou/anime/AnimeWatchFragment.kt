@@ -22,6 +22,11 @@ import ani.saikou.parsers.AnimeSources
 import ani.saikou.parsers.HAnimeSources
 import ani.saikou.settings.PlayerSettings
 import ani.saikou.settings.UserInterfaceSettings
+import ani.saikou.subcriptions.Notifications
+import ani.saikou.subcriptions.Notifications.Group.ANIME_GROUP
+import ani.saikou.subcriptions.Subscription.Companion.getChannelId
+import ani.saikou.subcriptions.SubscriptionHelper
+import ani.saikou.subcriptions.SubscriptionHelper.Companion.saveSubscription
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -95,8 +100,8 @@ class AnimeWatchFragment : Fragment() {
 
         binding.animeSourceRecycler.layoutManager = gridLayoutManager
 
-        model.scrolledToTop.observe(viewLifecycleOwner){
-            if(it) binding.animeSourceRecycler.scrollToPosition(0)
+        model.scrolledToTop.observe(viewLifecycleOwner) {
+            if (it) binding.animeSourceRecycler.scrollToPosition(0)
         }
 
         continueEp = model.continueMedia ?: false
@@ -104,6 +109,8 @@ class AnimeWatchFragment : Fragment() {
             if (it != null) {
                 media = it
                 media.selected = model.loadSelected(media)
+
+                subscribed = SubscriptionHelper.getSubscriptions(requireContext()).containsKey(media.id)
 
                 style = media.selected!!.recyclerStyle
                 reverse = media.selected!!.recyclerReversed
@@ -147,7 +154,7 @@ class AnimeWatchFragment : Fragment() {
                             if (media.anime!!.kitsuEpisodes!!.containsKey(i)) {
                                 episode.desc = episode.desc ?: media.anime!!.kitsuEpisodes!![i]?.desc
                                 episode.title = episode.title ?: media.anime!!.kitsuEpisodes!![i]?.title
-                                episode.thumb = episode.thumb?: media.anime!!.kitsuEpisodes!![i]?.thumb ?: FileUrl[media.cover]
+                                episode.thumb = episode.thumb ?: media.anime!!.kitsuEpisodes!![i]?.thumb ?: FileUrl[media.cover]
                             }
                         }
                     }
@@ -178,6 +185,8 @@ class AnimeWatchFragment : Fragment() {
                             position
                         )
                     }
+
+                    headerAdapter.subscribeButton(true)
                     reload()
                 }
             }
@@ -206,7 +215,7 @@ class AnimeWatchFragment : Fragment() {
         return model.watchSources?.get(i)!!
     }
 
-    fun onDubClicked(checked:Boolean){
+    fun onDubClicked(checked: Boolean) {
         val selected = model.loadSelected(media)
         model.watchSources?.get(selected.source)?.selectDub = checked
         selected.preferDub = checked
@@ -236,14 +245,39 @@ class AnimeWatchFragment : Fragment() {
         reload()
     }
 
+    var subscribed = false
+    fun onNotificationPressed(subscribed: Boolean, source: String) {
+        this.subscribed = subscribed
+        saveSubscription(requireContext(), media, subscribed)
+        if (!subscribed)
+            Notifications.deleteChannel(requireContext(), getChannelId(true, media.id))
+        else
+            Notifications.createChannel(
+                requireContext(),
+                ANIME_GROUP,
+                getChannelId(true, media.id),
+                media.userPreferredName
+            )
+        snackString(
+            if (subscribed) "Subscribed! Receiving notifications, when new episodes are released on $source."
+            else "Unsubscribed, you will not receive any notifications."
+        )
+    }
+
     fun onEpisodeClick(i: String) {
         model.continueMedia = false
+        model.saveSelected(media.id, media.selected!!, requireActivity())
         model.onEpisodeClick(media, i, requireActivity().supportFragmentManager)
     }
 
     @SuppressLint("NotifyDataSetChanged")
     private fun reload() {
         val selected = model.loadSelected(media)
+
+        //Find latest episode for subscription
+        selected.latest = media.anime?.episodes?.values?.maxOfOrNull { it.number.toFloatOrNull() ?: 0f } ?: 0f
+        selected.latest = media.userProgress?.toFloat()?.takeIf { selected.latest < it } ?: selected.latest
+
         model.saveSelected(media.id, selected, requireActivity())
         headerAdapter.handleEpisodes()
         episodeAdapter.notifyItemRangeRemoved(0, episodeAdapter.arr.size)

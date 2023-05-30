@@ -221,6 +221,29 @@
                     </TableRow>
 
                     <TableRow
+                        android:id="@+id/mediaInfoAuthorContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:alpha="0.58"
+                            android:text="@string/author"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/mediaInfoAuthor"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/poppins_bold"
+                            android:textAlignment="textEnd" />
+                    </TableRow>
+
+                    <TableRow
                         android:id="@+id/mediaInfoSeasonContainer"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -308,7 +331,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:breakStrategy="balanced"
-                            android:fontFamily="@font/poppins_bold" />
+                            android:fontFamily="@font/poppins_bold"
+                            tools:targetApi="m" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -329,7 +353,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:breakStrategy="balanced"
-                            android:fontFamily="@font/poppins_bold" />
+                            android:fontFamily="@font/poppins_bold"
+                            tools:targetApi="m" />
                     </LinearLayout>
                 </TableLayout>
 

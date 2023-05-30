@@ -4,17 +4,25 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import ani.saikou.loadData
+import ani.saikou.mal.MAL
 import ani.saikou.media.Media
 import ani.saikou.others.AppUpdater
-import ani.saikou.toastString
+import ani.saikou.snackString
+import ani.saikou.tryWithSuspend
 
 
 suspend fun getUserId(update: Runnable) {
     if (Anilist.userid == null && Anilist.token != null) {
-        if (Anilist.query.getUserData())
+        if (Anilist.query.getUserData()) {
+            tryWithSuspend{
+                if(MAL.token!=null && !MAL.query.getUserData())
+                    snackString("Error loading MAL User Data")
+            }
             update.run()
+        }
         else
-            toastString("Error loading Data")
+            snackString("Error loading Anilist User Data")
     } else update.run()
 }
 
@@ -31,6 +39,10 @@ class AnilistHomeViewModel : ViewModel() {
     fun getAnimeFav(): LiveData<ArrayList<Media>> = animeFav
     suspend fun setAnimeFav() = animeFav.postValue(Anilist.query.favMedia(true))
 
+    private val animePlanned: MutableLiveData<ArrayList<Media>> = MutableLiveData<ArrayList<Media>>(null)
+    fun getAnimePlanned(): LiveData<ArrayList<Media>> = animePlanned
+    suspend fun setAnimePlanned() = animePlanned.postValue(Anilist.query.continueMedia("ANIME", true))
+
     private val mangaContinue: MutableLiveData<ArrayList<Media>> = MutableLiveData<ArrayList<Media>>(null)
     fun getMangaContinue(): LiveData<ArrayList<Media>> = mangaContinue
     suspend fun setMangaContinue() = mangaContinue.postValue(Anilist.query.continueMedia("MANGA"))
@@ -39,13 +51,18 @@ class AnilistHomeViewModel : ViewModel() {
     fun getMangaFav(): LiveData<ArrayList<Media>> = mangaFav
     suspend fun setMangaFav() = mangaFav.postValue(Anilist.query.favMedia(false))
 
+    private val mangaPlanned: MutableLiveData<ArrayList<Media>> = MutableLiveData<ArrayList<Media>>(null)
+    fun getMangaPlanned(): LiveData<ArrayList<Media>> = mangaPlanned
+    suspend fun setMangaPlanned() = mangaPlanned.postValue(Anilist.query.continueMedia("MANGA", true))
+
     private val recommendation: MutableLiveData<ArrayList<Media>> = MutableLiveData<ArrayList<Media>>(null)
     fun getRecommendation(): LiveData<ArrayList<Media>> = recommendation
     suspend fun setRecommendation() = recommendation.postValue(Anilist.query.recommendations())
 
     suspend fun loadMain(context: FragmentActivity) {
         Anilist.getSavedToken(context)
-        AppUpdater.check(context)
+        MAL.getSavedToken(context)
+        if (loadData<Boolean>("check_update") != false) AppUpdater.check(context)
         genres.postValue(Anilist.query.getGenresAndTags(context))
     }
 
@@ -67,7 +84,7 @@ class AnilistAnimeViewModel : ViewModel() {
         trending.postValue(
             Anilist.query.search(
                 type,
-                perPage = 10,
+                perPage = 12,
                 sort = "Trending",
                 season = season,
                 seasonYear = year,

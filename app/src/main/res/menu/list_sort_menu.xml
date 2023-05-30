@@ -7,6 +7,9 @@
         android:id="@+id/title"
         android:title="@string/sort_by_title" />
     <item
+        android:id="@+id/release"
+        android:title="@string/sort_by_release_date" />
+    <item
         android:id="@+id/updated"
         android:title="@string/sort_by_last_updated" />
 </menu>

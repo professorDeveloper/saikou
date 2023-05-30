@@ -320,50 +320,6 @@
                 app:showText="false"
                 app:thumbTint="@color/button_switch_track" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="-8dp"
-                android:layout_marginBottom="8dp"
-                android:alpha="0.58"
-                android:fontFamily="@font/poppins_family"
-                android:paddingStart="32dp"
-                android:paddingEnd="32dp"
-                android:text="@string/subtitle_toggle_kamyroll"
-                android:textSize="14sp" />
-
-            <Button
-                android:id="@+id/kamySubtitleType"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="64dp"
-                android:layout_marginBottom="8dp"
-                android:fontFamily="@font/poppins_bold"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:paddingStart="32dp"
-                android:paddingEnd="32dp"
-                android:text="@string/kamyroll_subtitle_type_select"
-                android:textAlignment="viewStart"
-                android:textAllCaps="false"
-                android:textColor="@color/bg_opp"
-                app:cornerRadius="0dp"
-                app:icon="@drawable/ic_round_alpha_t_box_24"
-                app:iconPadding="16dp"
-                app:iconSize="24dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="-8dp"
-                android:layout_marginBottom="8dp"
-                android:alpha="0.58"
-                android:fontFamily="@font/poppins_family"
-                android:paddingStart="32dp"
-                android:paddingEnd="32dp"
-                android:text="@string/kamyroll_subtitle_types"
-                android:textSize="14sp" />
-
             <Button
                 android:id="@+id/videoSubColorPrimary"
                 style="@style/Widget.Material3.Button.TextButton"
@@ -573,68 +529,102 @@
 
         </ani.saikou.others.Xpandable>
 
-        <ani.saikou.others.Xpandable
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="64dp"
-                android:fontFamily="@font/poppins_bold"
-                android:gravity="center_vertical"
-                android:textColor="?attr/colorSecondary"
-                app:drawableEndCompat="@drawable/ic_round_arrow_drop_down_24"
-                tools:ignore="TextContrastCheck"
-                android:paddingStart="32dp"
-                android:paddingEnd="32dp"
-                android:text="@string/timestamps" />
-
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/playerSettingsTimeStamps"
+            <ani.saikou.others.Xpandable
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:checked="true"
-                android:drawableStart="@drawable/ic_round_art_track_24"
-                android:drawablePadding="16dp"
-                android:elegantTextHeight="true"
-                android:fontFamily="@font/poppins_bold"
-                android:minHeight="64dp"
-                android:paddingStart="32dp"
-                android:paddingEnd="32dp"
-                android:text="@string/always_load_time_stamps"
-                android:textAlignment="viewStart"
-                android:textColor="@color/bg_opp"
-                app:cornerRadius="0dp"
-                app:drawableTint="?attr/colorPrimary"
-                app:showText="false"
-                app:thumbTint="@color/button_switch_track"/>
+                android:orientation="vertical">
 
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/playerSettingsShowTimeStamp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:checked="true"
-                android:drawableStart="@drawable/ic_round_fast_forward_24"
-                android:drawablePadding="16dp"
-                android:elegantTextHeight="true"
-                android:fontFamily="@font/poppins_bold"
-                android:minHeight="64dp"
-                android:paddingStart="32dp"
-                android:paddingEnd="32dp"
-                android:text="@string/show_skip_time_stamp_button"
-                android:textAlignment="viewStart"
-                android:textColor="@color/bg_opp"
-                app:cornerRadius="0dp"
-                app:drawableTint="?attr/colorPrimary"
-                app:showText="false"
-                app:thumbTint="@color/button_switch_track">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:fontFamily="@font/poppins_bold"
+                    android:gravity="center_vertical"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    android:text="@string/timestamps"
+                    android:textColor="?attr/colorSecondary"
+                    app:drawableEndCompat="@drawable/ic_round_arrow_drop_down_24"
+                    tools:ignore="TextContrastCheck" />
 
-            </com.google.android.material.switchmaterial.SwitchMaterial>
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/playerSettingsTimeStamps"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:checked="true"
+                    android:drawableStart="@drawable/ic_round_art_track_24"
+                    android:drawablePadding="16dp"
+                    android:elegantTextHeight="true"
+                    android:fontFamily="@font/poppins_bold"
+                    android:minHeight="64dp"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    android:text="@string/always_load_time_stamps"
+                    android:textAlignment="viewStart"
+                    android:textColor="@color/bg_opp"
+                    app:cornerRadius="0dp"
+                    app:drawableTint="?attr/colorPrimary"
+                    app:showText="false"
+                    app:thumbTint="@color/button_switch_track" />
 
-        </ani.saikou.others.Xpandable>
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/playerSettingsTimeStampsProxy"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:checked="true"
+                    android:drawableStart="@drawable/ic_round_dns_24"
+                    android:drawablePadding="16dp"
+                    android:elegantTextHeight="true"
+                    android:fontFamily="@font/poppins_bold"
+                    android:minHeight="64dp"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    android:text="@string/timestamp_proxy"
+                    android:textAlignment="viewStart"
+                    android:textColor="@color/bg_opp"
+                    app:cornerRadius="0dp"
+                    app:drawableTint="?attr/colorPrimary"
+                    app:showText="false"
+                    app:thumbTint="@color/button_switch_track" />
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="-8dp"
+                    android:layout_marginBottom="8dp"
+                    android:alpha="0.58"
+                    android:fontFamily="@font/poppins_family"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    android:text="@string/timestamp_proxy_desc"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/playerSettingsShowTimeStamp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:checked="true"
+                    android:drawableStart="@drawable/ic_round_fast_forward_24"
+                    android:drawablePadding="16dp"
+                    android:elegantTextHeight="true"
+                    android:fontFamily="@font/poppins_bold"
+                    android:minHeight="64dp"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    android:text="@string/show_skip_time_stamp_button"
+                    android:textAlignment="viewStart"
+                    android:textColor="@color/bg_opp"
+                    app:cornerRadius="0dp"
+                    app:drawableTint="?attr/colorPrimary"
+                    app:showText="false"
+                    app:thumbTint="@color/button_switch_track">
+
+                </com.google.android.material.switchmaterial.SwitchMaterial>
+
+            </ani.saikou.others.Xpandable>
 
         <ani.saikou.others.Xpandable
             android:layout_width="match_parent"
@@ -1200,36 +1190,6 @@
                 android:text="@string/show_cast_button_info"
                 android:textSize="14sp" />
 
-            <Button
-                android:id="@+id/kamyLang"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="64dp"
-                android:layout_marginBottom="8dp"
-                android:fontFamily="@font/poppins_bold"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:paddingStart="32dp"
-                android:paddingEnd="32dp"
-                android:text="@string/kamyroll_language_button"
-                android:textAlignment="viewStart"
-                android:textAllCaps="false"
-                android:textColor="@color/bg_opp"
-                app:cornerRadius="0dp"
-                app:icon="@drawable/ic_round_translate_variant_24"
-                app:iconPadding="16dp"
-                app:iconSize="24dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:alpha="0.58"
-                android:fontFamily="@font/poppins_family"
-                android:paddingStart="32dp"
-                android:paddingEnd="32dp"
-                android:text="@string/kamyroll_language_info"
-                android:textSize="14sp" />
 
         </LinearLayout>
 

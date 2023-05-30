@@ -23,11 +23,11 @@ class ReaderSettingsDialogFragment : BottomSheetDialogFragment() {
         val activity = requireActivity() as MangaReaderActivity
         val settings = activity.settings.default
 
-        binding.readerDirectionText.text = settings.direction.toString()
+        binding.readerDirectionText.text = settings.direction.string
         binding.readerDirection.rotation = 90f * (settings.direction.ordinal)
         binding.readerDirection.setOnClickListener {
             settings.direction = Directions[settings.direction.ordinal + 1] ?: Directions.TOP_TO_BOTTOM
-            binding.readerDirectionText.text = settings.direction.toString()
+            binding.readerDirectionText.text = settings.direction.string
             binding.readerDirection.rotation = 90f * (settings.direction.ordinal)
             activity.applySettings()
         }
@@ -49,7 +49,13 @@ class ReaderSettingsDialogFragment : BottomSheetDialogFragment() {
             activity.applySettings()
         }
 
-        binding.readerLayoutText.text = settings.layout.toString()
+        binding.readerCropBorders.isChecked = settings.cropBorders
+        binding.readerCropBorders.setOnCheckedChangeListener { _,isChecked ->
+            settings.cropBorders = isChecked
+            activity.applySettings()
+        }
+
+        binding.readerLayoutText.text = settings.layout.string
         var selected = list[settings.layout.ordinal]
         selected.alpha = 1f
 
@@ -59,7 +65,7 @@ class ReaderSettingsDialogFragment : BottomSheetDialogFragment() {
                 selected = imageButton
                 selected.alpha = 1f
                 settings.layout = CurrentReaderSettings.Layouts[index]?:CurrentReaderSettings.Layouts.CONTINUOUS
-                binding.readerLayoutText.text = settings.layout.toString()
+                binding.readerLayoutText.text = settings.layout.string
                 activity.applySettings()
                 paddingAvailable(settings.layout.ordinal!=0)
             }
@@ -130,6 +136,12 @@ class ReaderSettingsDialogFragment : BottomSheetDialogFragment() {
         binding.readerWrapImage.isChecked = settings.wrapImages
         binding.readerWrapImage.setOnCheckedChangeListener { _,isChecked ->
             settings.wrapImages = isChecked
+            activity.applySettings()
+        }
+
+        binding.readerLongClickImage.isChecked = settings.longClickImage
+        binding.readerLongClickImage.setOnCheckedChangeListener { _,isChecked ->
+            settings.longClickImage = isChecked
             activity.applySettings()
         }
     }

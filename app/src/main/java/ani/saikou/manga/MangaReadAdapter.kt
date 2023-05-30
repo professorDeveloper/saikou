@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.R
 import ani.saikou.anime.handleProgress
@@ -15,9 +16,12 @@ import ani.saikou.databinding.ItemChipBinding
 import ani.saikou.loadData
 import ani.saikou.loadImage
 import ani.saikou.media.Media
+import ani.saikou.media.MediaDetailsActivity
 import ani.saikou.media.SourceSearchDialogFragment
 import ani.saikou.parsers.MangaReadSources
 import ani.saikou.px
+import ani.saikou.subcriptions.Notifications.Companion.openSettings
+import ani.saikou.subcriptions.Subscription.Companion.getChannelId
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -28,6 +32,7 @@ class MangaReadAdapter(
     private val mangaReadSources: MangaReadSources
 ) : RecyclerView.Adapter<MangaReadAdapter.ViewHolder>() {
 
+    var subscribe: MediaDetailsActivity.PopImageButton? = null
     private var _binding: ItemAnimeWatchBinding? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -39,10 +44,17 @@ class MangaReadAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val binding = holder.binding
         _binding = binding
+        binding.sourceTitle.setText(R.string.chaps)
+
+        //Wrong Title
+        binding.animeSourceSearch.setOnClickListener {
+            SourceSearchDialogFragment().show(fragment.requireActivity().supportFragmentManager, null)
+        }
 
         //Source Selection
-        binding.animeSource.setText(mangaReadSources.names[media.selected!!.source])
-        mangaReadSources[media.selected!!.source].apply {
+        val source = media.selected!!.source.let { if (it >= mangaReadSources.names.size) 0 else it }
+        binding.animeSource.setText(mangaReadSources.names[source])
+        mangaReadSources[source].apply {
             binding.animeSourceTitle.text = showUserText
             showUserTextListener = { MainScope().launch { binding.animeSourceTitle.text = it } }
         }
@@ -53,16 +65,28 @@ class MangaReadAdapter(
                 binding.animeSourceTitle.text = showUserText
                 showUserTextListener = { MainScope().launch { binding.animeSourceTitle.text = it } }
             }
+            subscribeButton(false)
             fragment.loadChapters(i)
         }
 
-        //Wrong Title
-        binding.animeSourceSearch.setOnClickListener {
-            SourceSearchDialogFragment().show(fragment.requireActivity().supportFragmentManager, null)
+        //Subscription
+        subscribe = MediaDetailsActivity.PopImageButton(
+            fragment.lifecycleScope,
+            binding.animeSourceSubscribe,
+            R.drawable.ic_round_notifications_active_24,
+            R.drawable.ic_round_notifications_none_24,
+            R.color.bg_opp,
+            R.color.violet_400,
+            fragment.subscribed
+        ) {
+            fragment.onNotificationPressed(it, binding.animeSource.text.toString())
         }
 
-        //Title
-        binding.sourceTitle.setText(R.string.chaps)
+        subscribeButton(false)
+
+        binding.animeSourceSubscribe.setOnLongClickListener {
+            openSettings(fragment.requireContext(), getChannelId(true, media.id))
+        }
 
         //Icons
         binding.animeSourceGrid.visibility = View.GONE
@@ -75,8 +99,8 @@ class MangaReadAdapter(
             fragment.onIconPressed(style, reversed)
         }
         var selected = when (style) {
-            0 -> binding.animeSourceList
-            1 -> binding.animeSourceCompact
+            0    -> binding.animeSourceList
+            1    -> binding.animeSourceCompact
             else -> binding.animeSourceList
         }
         selected.alpha = 1f
@@ -98,6 +122,10 @@ class MangaReadAdapter(
 
         //Chapter Handling
         handleChapters()
+    }
+
+    fun subscribeButton(enabled: Boolean) {
+        subscribe?.enabled(enabled)
     }
 
     //Chips
@@ -143,7 +171,9 @@ class MangaReadAdapter(
         if (binding != null) {
             if (media.manga?.chapters != null) {
                 val chapters = media.manga.chapters!!.keys.toTypedArray()
-                var continueEp = loadData<String>("${media.id}_current_chp") ?: media.userProgress?.plus(1).toString()
+                val anilistEp = (media.userProgress ?: 0).plus(1)
+                val appEp = loadData<String>("${media.id}_current_chp")?.toIntOrNull() ?: 1
+                var continueEp = (if (anilistEp > appEp) anilistEp else appEp).toString()
                 if (chapters.contains(continueEp)) {
                     binding.animeSourceContinue.visibility = View.VISIBLE
                     handleProgress(
@@ -173,8 +203,7 @@ class MangaReadAdapter(
                         }
 
                     }
-                }
-                else{
+                } else {
                     binding.animeSourceContinue.visibility = View.GONE
                 }
                 binding.animeSourceProgressBar.visibility = View.GONE

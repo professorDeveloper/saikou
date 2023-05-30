@@ -8,7 +8,7 @@
     <string name="login">Login</string>
     <string name="logout">Logout</string>
 
-    <string name="discord">https://discord.gg/5TXAWTU5qr</string>
+    <string name="discord">https://discord.gg/2T7TunuwFZ</string>
     <string name="telegram">https://telegram.me/saikou_app</string>
     <string name="github">https://github.com/saikou-app/saikou</string>
 
@@ -26,7 +26,7 @@
 
     <string name="sad">X(</string>
     <string name="oh">:o</string>
-    <string name="colon">\u0008:\u0008</string>
+    <string name="colon">" : "</string>
 
     <string name="no_internet">No Internet Connection</string>
     <string name="refresh">Refresh</string>
@@ -44,8 +44,8 @@
     <string name="popular_manga">Popular Manga</string>
 
     <string name="username">Username</string>
-    <string name="chapters_read">Chapters Read\u0008</string>
-    <string name="episodes_watched">Episodes Watched\u0008</string>
+    <string name="chapters_read">"Chapters Read "</string>
+    <string name="episodes_watched">"Episodes Watched "</string>
     <string name="continue_reading">Continue Reading</string>
     <string name="continue_watching">Continue Watching</string>
     <string name="recommended">Recommended</string>
@@ -69,7 +69,7 @@
     </string-array>
     <string name="progress">PROGRESS</string>
     <string name="score">SCORE</string>
-    <string name="score_suffix">\u0008/ 10</string>
+    <string name="score_suffix">" / 10"</string>
     <string name="started_at">STARTED AT</string>
     <string name="completed_at">COMPLETED AT</string>
     <string name="save">Save</string>
@@ -83,7 +83,7 @@
     <string name="total_eps">Total Episodes</string>
     <string name="total_chaps">Total Chapters</string>
     <string name="ep_duration">Average Duration</string>
-    <string name="min">\u0008min</string>
+    <string name="min">" min"</string>
     <string name="season">Season</string>
     <string name="start_date">Start Date</string>
     <string name="end_date">End Date</string>
@@ -128,6 +128,7 @@
     <string name="settings">Settings</string>
     <string name="player_settings">Player Settings</string>
     <string name="recentlyListOnly">Only show My Shows in Recently Updated</string>
+    <string name="download_manager_select">Download Manager</string>
     <string name="downloadInSd">Download in SD card</string>
     <string name="noSdFound">No SD card was Found.</string>
     <string name="reader_settings">Reader Settings</string>
@@ -140,7 +141,7 @@
     <string name="theme">Theme</string>
     <string name="ui_settings">UI Settings</string>
     <string name="about">About</string>
-    <string name="desc">\u0008\u0008\u0008 Saikou is crafted based on simplistic yet state-of-the-art elegance. It is an Anilist only client, which also lets you stream-download Anime &amp; Manga.\nSaikou literally means the \"best\" in japanese. Well, we would like to say this is the best open source app for anime and manga on Android, what would you say?</string>
+    <string name="desc">"    Saikou is crafted based on simplistic yet state-of-the-art elegance. It is an Anilist only client, which also lets you stream-download Anime &amp; Manga.\nSaikou literally means the \"best\" in japanese. Well, we would like to say this is the best open source app for anime and manga on Android, what would you say?"</string>
     <string name="devs">Developers</string>
     <string name="disclaimer">Disclaimer</string>
     <string name="full_disclaimer">
@@ -155,20 +156,16 @@
     <string-array name="tips">
         <item>You can Long Click an episode/chapter to Mark it as Read.</item>
         <item>Long Clicking Shows can directly open List Editor.</item>
-        <item>There are few easter eggs hidden in the App.</item>
-        <item>Internet sucks? search taking too much time? try spam-Clicking the Progress Bar</item>
+        <item>There are few more easter eggs hidden in the App.</item>
         <item>Challenge: Go to the very bottom of the Popular Anime &amp; Manga</item>
         <item>Try Long Clicking the Show\'s Title.</item>
         <item>Damn, why are you wasting your Time?</item>
-        <item>Looks like someone likes this Animation.</item>
         <item>You can Long Click to copy this Message.</item>
-        <item>Saikou!</item>
-        <item>OMG LOOK YOU! FOUND AN EASTER EGG!?!?</item>
+        <item>OMG LOOK! YOU FOUND AN EASTER EGG!?</item>
         <item>You know who else likes this Animation?</item>
-        <item>My Mom!</item>
-        <item>9anime be crying</item>
         <item>MAL support? bruh.</item>
         <item>Novels? more like NO vels.</item>
+        <item>Long Click the logo to check for App Update</item>
     </string-array>
 
     <string name="video">Video</string>
@@ -179,31 +176,26 @@
     <string name="height">Height</string>
     <string name="width">Width</string>
     <string name="default_quality_info">Automatically uses the closest quality provided by default, ONLY applied for \"Multi Quality\" Servers. Auto changes upon playing a video.</string>
-    <string name="default_playback_speed">Default Playback Speed - %1$s</string>
+    <string name="default_playback_speed">Default Playback Speed : %1$s</string>
     <string name="cursed_speeds">Cursed Speeds</string>
     <string name="resize_mode_button">Default Resize Mode</string>
     <string name="subtitles">Subtitles</string>
     <string name="subtitle_toggle">Subtitles</string>
-    <string name="subtitle_toggle_kamyroll">For this to take effect in Hard-Subbed Kamyroll, please restart the app. (Or use Soft-Sub and select none as subtitle)</string>
-    <string name="kamyroll_subtitle_type_select">Kamyroll Subtitle Type</string>
-    <string name="kamyroll_subtitle_types">ASS - pre-set style from episode \nVTT - customizable subtitles, positioning \nSRT - customizable subtitles, no positioning</string>
     <string name="primary_sub_color_select">Subtitle Color</string>
     <string name="secondary_sub_color_select">Subtitle Outline Color</string>
     <string name="secondary_sub_outline_type_select">Subtitle Outline Type</string>
     <string name="sub_background_color_select">Subtitle Background Color</string>
     <string name="sub_window_color_select">Subtitle Window Color</string>
     <string name="sub_window_color_info">"The subtitle window is the part left and right from them. (where the background isn't)"</string>
-    <string name="sub_color_info"><b>Note:</b> Changing Subtitle formatting only works with Soft-Subbed Sources such as Zoro and Kamyroll!</string>
+    <string name="sub_color_info"><b>Note:</b> Changing Subtitle formatting only works with Soft-Subbed Sources such as Zoro!</string>
     <string name="sub_font_select">Subtitle Font</string>
     <string name="subtitle_font_size">Subtitle Size</string>
-    <string name="kamyroll_language_button">Kamyroll Language</string>
-    <string name="kamyroll_language_info"><b>Note:</b> This changes the episode title and description language. <b>New Episodes won\'t be available with translated titles for up to 2 hours and will not be shown in the episode list. To view them as they release please switch to english.</b> For changes to take effect the app needs to restart. <b>Some languages might not work!</b></string>
 
     <string name="auto">Auto</string>
     <string name="auto_play_next_episode">Autoplay Next Episode</string>
     <string name="auto_play_next_episode_info">Automatically disables if there is no interaction with player after 1 hour.</string>
     <string name="auto_skip_fillers">Auto Skip Fillers</string>
-    <string name="auto_skip_fillers_info">Skips filler episodes when going to next Episode.</string>
+    <string name="auto_skip_fillers_info">Skips filler episodes when going to next episode.</string>
 
     <string name="update_progress">Update Progress</string>
     <string name="ask_update_progress_anime">Ask for each Anime \"Individually\"</string>
@@ -217,7 +209,7 @@
     <string name="watch_complete_percentage_info">The percentage at which your Anilist progress should be updated after watching an episode. \nThis also sets the \% for when to preload links for the next episode.</string>
 
     <string name="behaviour">Behaviour</string>
-    <string name="always_continue">Always Continue from where you Left</string>
+    <string name="always_continue">Always Continue from where you left off</string>
     <string name="pause_video_focus">Pause when not in Focus</string>
     <string name="gestures">Volume &amp; Brightness Gestures</string>
     <string name="double_tap">Double tap to Seek</string>
@@ -230,7 +222,7 @@
     <string name="show_cast_button_info">Requires \"Web Video Caster\" app to cast.</string>
     <string name="picture_in_picture">Picture in Picture</string>
     <string name="always_minimize">Always Minimize</string>
-    <string name="always_minimize_info">Requires PiP to be enabled, Makes the player behave like Youtube Player but better.\nAlso hides the PiP button.</string>
+    <string name="always_minimize_info">Requires PiP to be enabled, makes the player behave like Youtube Player but better.\nAlso hides the PiP button.</string>
 
     <string name="app">App</string>
     <string name="immersive_mode">Hide Status Bar</string>
@@ -239,8 +231,10 @@
     <string-array name="home_layouts">
         <item>Continue Watching</item>
         <item>Favourite Anime</item>
+        <item>Planned Anime</item>
         <item>Continue Reading</item>
         <item>Favourite Manga</item>
+        <item>Planned Manga</item>
         <item>Recommended</item>
     </string-array>
 
@@ -250,7 +244,7 @@
     <string name="banner_animations">Banner Animations</string>
     <string name="layout_animations">Layout Animations</string>
     <string name="animation_speed">Overall Speed</string>
-    <string name="empty_fav">Looks like you don\'t like anything,\nTry Hearting a show to keep it here.</string>
+    <string name="empty_fav">Looks like you don\'t like anything,\nTry liking a show to keep it here.</string>
     <string name="fav_anime">Favourite Anime</string>
     <string name="fav_manga">Favourite Manga</string>
     <string name="restart_app">Restart the app?</string>
@@ -261,7 +255,7 @@
     <string name="prefer_dub">Prefer Dubbed Anime</string>
     <string name="none">None</string>
     <string name="selected_dns">Selected DNS</string>
-    <string name="dns_info">Change, If your ISP blocks any Source</string>
+    <string name="dns_info">Change if your ISP blocks any source</string>
     <string name="keep_screen_on">Keep Screen On</string>
     <string name="layout">Layout</string>
     <string name="spaced_pages">Spaced Pages</string>
@@ -286,7 +280,7 @@
     <string name="volume_buttons">Change pages with Volume Buttons</string>
     <string name="list_private">Private</string>
     <string name="wrap_images">Wrap Images</string>
-    <string name="wrap_images_info">Mostly useful for larger Devices, removes space between images, if they exist.</string>
+    <string name="wrap_images_info">Mostly useful for larger devices, removes space between images, if they exist.</string>
     <string name="reload">Reload</string>
     <string name="share">Share</string>
     <string name="skip">Skip</string>
@@ -299,7 +293,7 @@
     <string name="total_repeats">TOTAL REPEATS</string>
     <string name="custom_lists">Custom Lists</string>
     <string name="donate_desc">Want to support Saikou\'s Creator?\nConsider Donating</string>
-    <string name="donate_goal">(We just reached a goal of $100!)</string>
+    <string name="donate_goal">(Let\'s reach to $1000!)</string>
     <string name="filter">Filter</string>
     <string name="year">Year</string>
     <string name="apply">Apply</string>
@@ -309,5 +303,45 @@
     <string name="previous_season">Previous Season</string>
     <string name="include_media_in_list">Include List</string>
     <string name="release_calendar">Calendar</string>
+    <string name="planned_anime">Planned Anime</string>
+    <string name="planned_manga">Planned Manga</string>
+    <string name="image_long_clicking">Open image by Long Clicking</string>
+    <string name="always_continue_shows">Always continue Shows</string>
+    <string name="timestamp_proxy_desc">Useful if you are getting Handshake Fails</string>
+    <string name="timestamp_proxy">Use Proxy for Timestamps</string>
+    <string name="check_app_updates">Always check for App Updates</string>
+    <string name="author">Author</string>
+    <string name="forks">Forks</string>
+    <string name="faq">FAQ</string>
+    <string name="accounts">Accounts</string>
+    <string name="myanimelist">MyAnimeList</string>
+    <string name="login_with_anilist">Login with Anilist!</string>
+    <string name="anilist">Anilist</string>
+    <string name="account_help">How does this work\?</string>
+    <string name="full_account_help">
+        Saikou is an Anilist Based App, so for syncing with your MAL Account, It needs an Anilist account to be logged in.
+        \nOnce logged in with both Anilist and MAL accounts, the app will automatically update your MAL account whenever:
+        \n- Add a new Media
+        \n- Edit a Media
+        \n- Delete a Media
 
+        \n\nNote: The app will not sync old Media\'s from Anilist to MAL, It\'s recommended to sync them.
+        \n- Check __FAQs__ for _Easy Method_
+
+        \n\nAnd for _Intermediates_ :
+        \n- [How to sync Anilist data with MAL](https://anilist.co/forum/thread/2654)
+        \n- [How to sync MAL data with Anilist](https://anilist.co/forum/thread/3393)
+
+        \n\n_It is not required to sync both MAL and Anilist accounts._
+    </string>
+    <string name="notification_for_checking_subscriptions">Show notification for Checking Subscriptions</string>
+    <string name="checking_subscriptions">Notification for Checking Subscriptions</string>
+    <string name="subscriptions_checking_time_s">Subscriptions Update Frequency : %1$s</string>
+    <string name="subscriptions_checking_time">Subscriptions Update Frequency</string>
+    <string name="subscriptions_info">Amount of time for Saikou to periodically check for new Episodes/Chapters\n(Less time will cause more battery consumption)</string>
+    <string name="do_not_update">Don\'t Update</string>
+    <string name="loading_next_chap">Loading Next Chapter</string>
+    <string name="grid">Grid</string>
+    <string name="sort_by_release_date">Sort by Release Date</string>
+    <string name="crop_borders">Crop Borders</string>
 </resources>

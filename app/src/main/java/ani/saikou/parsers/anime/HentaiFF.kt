@@ -35,7 +35,7 @@ open class HentaiFF : AnimeParser() {
         return map.values.toList()
     }
 
-    override suspend fun loadVideoServers(episodeLink: String, extra: Any?): List<VideoServer> {
+    override suspend fun loadVideoServers(episodeLink: String, extra: Map<String,String>?): List<VideoServer> {
         return client.get(episodeLink).document.select("select.mirror>option").mapNotNull {
             tryWith {
                 val base64 = it.attr("value")

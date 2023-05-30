@@ -11,7 +11,6 @@ data class PlayerSettings(
 
     //Subtitles
     var subtitles: Boolean = true,
-    var kamySubType: Int = 1,
     var primaryColor: Int = 4,
     var secondaryColor: Int = 0,
     var outline: Int = 0,
@@ -23,6 +22,7 @@ data class PlayerSettings(
 
     //TimeStamps
     var timeStampsEnabled: Boolean = true,
+    var useProxyForTimeStamps: Boolean = true,
     var showTimeStampButton: Boolean = true,
 
     //Auto

@@ -17,6 +17,7 @@
         tools:visibility="visible">
 
         <TextView
+            android:id="@+id/selectorTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins_bold"
@@ -39,7 +40,6 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins_bold"
             android:padding="10dp"
-            android:text="@string/server_selector"
             android:textAlignment="center"
             android:textAllCaps="true"
             android:textSize="14sp" />

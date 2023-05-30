@@ -13,6 +13,8 @@ import androidx.lifecycle.lifecycleScope
 import ani.saikou.*
 import ani.saikou.anilist.Anilist
 import ani.saikou.databinding.BottomSheetMediaListSmallBinding
+import ani.saikou.mal.MAL
+import ani.saikou.others.getSerialized
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,7 +37,7 @@ class MediaListDialogSmallFragment : BottomSheetDialogFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            media = it.getSerializable("media") as Media
+            media = it.getSerialized("media")!!
         }
     }
 
@@ -122,19 +124,16 @@ class MediaListDialogSmallFragment : BottomSheetDialogFragment() {
         binding.mediaListSave.setOnClickListener {
             scope.launch {
                 withContext(Dispatchers.IO) {
-                    Anilist.mutation.editList(
-                        media.id,
-                        if (_binding?.mediaListProgress?.text.toString() != "") _binding?.mediaListProgress?.text.toString()
-                            .toInt() else null,
-                        if (_binding?.mediaListScore?.text.toString() != "") (_binding?.mediaListScore?.text.toString()
-                            .toDouble() * 10).toInt() else null,
-                        null,
-                        if (_binding?.mediaListStatus?.text.toString() != "") _binding?.mediaListStatus?.text.toString() else null,
-                        media.isListPrivate
-                    )
+                    withContext(Dispatchers.IO) {
+                        val progress = _binding?.mediaListProgress?.text.toString().toIntOrNull()
+                        val score = (_binding?.mediaListScore?.text.toString().toDoubleOrNull()?.times(10))?.toInt()
+                        val status = _binding?.mediaListStatus?.text.toString()
+                        Anilist.mutation.editList(media.id, progress, score, null, status, media.isListPrivate)
+                        MAL.query.editList(media.idMAL, media.anime != null, progress, score, status)
+                    }
                 }
                 Refresh.all()
-                toastString("List Updated")
+                snackString("List Updated")
                 dismissAllowingStateLoss()
             }
         }
