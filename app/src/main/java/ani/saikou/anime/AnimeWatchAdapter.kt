@@ -3,6 +3,8 @@ package ani.saikou.anime
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
+import android.os.Build.VERSION_CODES.R
+import android.text.method.Touch.scrollTo
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -149,7 +151,7 @@ class AnimeWatchAdapter(
         }
 
         //Episode Handling
-        handleEpisodes()
+\
     }
 
     fun subscribeButton(enabled : Boolean) {

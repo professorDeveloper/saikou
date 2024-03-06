@@ -1185,10 +1185,10 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     override fun onPause() {
         super.onPause()
         orientationListener?.disable()
-        if (isInitialized) {
-            playerView.player?.pause()
-            saveData("${media.id}_${media.anime!!.selectedEpisode}", exoPlayer.currentPosition, this)
-        }
+            if (isInitialized) {
+                playerView.player?.pause()
+                saveData("${media.id}_${media.anime!!.selectedEpisode}", exoPlayer.currentPosition, this)
+            }
     }
 
     override fun onResume() {

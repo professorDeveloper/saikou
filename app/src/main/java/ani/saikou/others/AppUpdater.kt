@@ -33,7 +33,7 @@ object AppUpdater {
 
             val version = md.substringAfter("# ").substringBefore("\n")
             logger("Git Version : $version")
-            val dontShow = loadData("dont_ask_for_update_$version") ?: false
+            val dontShow = loadData("dont_ask_for_update_$version") ?:true
             if (compareVersion(version) && !dontShow && !activity.isDestroyed) activity.runOnUiThread {
                 CustomBottomDialog.newInstance().apply {
                     setTitleText("${if (!BuildConfig.DEBUG) "" else "Beta "}Update Available")

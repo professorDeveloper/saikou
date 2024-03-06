@@ -59,8 +59,8 @@ class MediaInfoFragment : Fragment() {
         binding.mediaInfoContainer.visibility = if (loaded) View.VISIBLE else View.GONE
         binding.mediaInfoContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += 128f.px + navBarHeight }
 
-        model.scrolledToTop.observe(viewLifecycleOwner){
-            if(it) binding.mediaInfoScroll.scrollTo(0,0)
+        model.scrolledToTop.observe(viewLifecycleOwner) {
+            if (it) binding.mediaInfoScroll.scrollTo(0, 0)
         }
 
         model.getMedia().observe(viewLifecycleOwner) { media ->
@@ -68,9 +68,9 @@ class MediaInfoFragment : Fragment() {
                 loaded = true
                 binding.mediaInfoProgressBar.visibility = View.GONE
                 binding.mediaInfoContainer.visibility = View.VISIBLE
-                binding.mediaInfoName.text = "\t\t\t" + (media.name?:media.nameRomaji)
+                binding.mediaInfoName.text = "\t\t\t" + (media.name ?: media.nameRomaji)
                 binding.mediaInfoName.setOnLongClickListener {
-                    copyToClipboard(media.name?:media.nameRomaji)
+                    copyToClipboard(media.name ?: media.nameRomaji)
                     true
                 }
                 if (media.name != null) binding.mediaInfoNameRomajiContainer.visibility = View.VISIBLE
@@ -84,14 +84,14 @@ class MediaInfoFragment : Fragment() {
                 binding.mediaInfoFormat.text = media.format
                 binding.mediaInfoSource.text = media.source
                 binding.mediaInfoStart.text = media.startDate?.toString() ?: "??"
-                binding.mediaInfoEnd.text =media.endDate?.toString() ?: "??"
+                binding.mediaInfoEnd.text = media.endDate?.toString() ?: "??"
                 if (media.anime != null) {
                     binding.mediaInfoDuration.text =
                         if (media.anime.episodeDuration != null) media.anime.episodeDuration.toString() else "??"
                     binding.mediaInfoDurationContainer.visibility = View.VISIBLE
                     binding.mediaInfoSeasonContainer.visibility = View.VISIBLE
                     binding.mediaInfoSeason.text =
-                        (media.anime.season ?: "??")+ " " + (media.anime.seasonYear ?: "??")
+                        (media.anime.season ?: "??") + " " + (media.anime.seasonYear ?: "??")
                     if (media.anime.mainStudio != null) {
                         binding.mediaInfoStudioContainer.visibility = View.VISIBLE
                         binding.mediaInfoStudio.text = media.anime.mainStudio!!.name
