@@ -85,7 +85,7 @@ import kotlin.math.roundToInt
 
 @UnstableApi
 @SuppressLint("SetTextI18n", "ClickableViewAccessibility")
-class ExoplayerView : AppCompatActivity(), Player.Listener {
+class   ExoplayerView : AppCompatActivity(), Player.Listener {
 
     private val resumeWindow = "resumeWindow"
     private val resumePosition = "resumePosition"

@@ -149,7 +149,7 @@
             <ani.saikou.others.Xpandable
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:isExpanded="false"
+                app:isExpanded="true"
                 android:orientation="vertical">
 
                 <TextView
@@ -332,6 +332,7 @@
             <ani.saikou.others.Xpandable
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:isExpanded="true"
                 android:orientation="vertical">
 
                 <TextView
@@ -642,6 +643,7 @@
             <ani.saikou.others.Xpandable
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:isExpanded="true"
                 android:orientation="vertical">
 
                 <TextView

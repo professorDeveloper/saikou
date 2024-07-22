@@ -3,7 +3,6 @@ package ani.saikou.anime
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
-import android.os.Build.VERSION_CODES.R
 import android.text.method.Touch.scrollTo
 import android.view.LayoutInflater
 import android.view.View
@@ -79,7 +78,7 @@ class AnimeWatchAdapter(
             binding.animeSourceDubbedCont.visibility = if (isDubAvailableSeparately) View.VISIBLE else View.GONE
         }
 
-        binding.animeSource.setAdapter(ArrayAdapter(fragment.requireContext(), R.layout.item_dropdown, watchSources.names))
+        binding.animeSource.setAdapter(ArrayAdapter(fragment.requireContext(), ani.saikou.R.layout.item_dropdown, watchSources.names))
         binding.animeSourceTitle.isSelected = true
         binding.animeSource.setOnItemClickListener { _, _, i, _ ->
             fragment.onSourceChange(i).apply {
@@ -151,7 +150,7 @@ class AnimeWatchAdapter(
         }
 
         //Episode Handling
-\
+
     }
 
     fun subscribeButton(enabled : Boolean) {
